@@ -260,12 +260,16 @@ void keyboard_up_event(unsigned char key, int x, int y)
 PositionVis::PositionVis(int argc, char **argv)
 {
 
+    fixedYaw = 0;
     orig = makeVector(0,0,0,0);
     gpsPos_sub = nh.subscribe("/fcu/gps_position", 100, &PositionVis::gpsPositionCallback, this);
     gpsPose_sub = nh.subscribe("/fcu/gps_pose", 100, &PositionVis::gpsPoseCallback, this);
 
-    velcmd_sub = nh.subscribe("vel_cmd", 100, &PositionVis::velCallback, this);
+    velcmd_sub = nh.subscribe("/fcu/control", 100, &PositionVis::velCallback, this);
+    velcmd_pub = nh.advertise<asctec_hl_comm::mav_ctrl>("controlTimed", 1);
 
+    fixedPose_sub = nh.subscribe("/PelicanCtrl/fixedPose", 1, &PositionVis::fixedPoseCallback, this);
+    fixedPose_pub = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("fixedPoseTimed", 10);
 
     glutInit(&argc, argv);
 }
@@ -275,11 +279,44 @@ PositionVis::~PositionVis()
 
 }
 
-void PositionVis::velCallback(const geometry_msgs::Twist::Ptr &msg)
+void PositionVis::velCallback(const asctec_hl_comm::mav_ctrl::Ptr &msg)
 {
-    vel[0] = msg->linear.x;
-    vel[1] = msg->linear.y;
-    vel[2] = msg->linear.z;
+    msg->header.stamp = ros::Time::now();
+    velcmd_pub.publish(msg);
+//    vel[0] = msg->linear.x;
+//    vel[1] = msg->linear.y;
+//    vel[2] = msg->linear.z;
+}
+
+double n=0;
+double fy =0;
+void PositionVis::fixedPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg)
+{
+    geometry_msgs::PoseWithCovarianceStamped m;
+    m.header.stamp = ros::Time::now();
+    m.pose.pose.position = msg->pose.pose.position;
+    m.pose.pose.orientation = msg->pose.pose.orientation;
+
+    fixedYaw = tf::getYaw(m.pose.pose.orientation);
+    m.pose.pose.orientation.y = fixedYaw;
+
+    if(n<2)
+    {
+        fy = (n*fy+fixedYaw)/(n+1.0);
+        n+=1;
+    }
+    else
+    {
+        fy = (((n-1))*fy+fixedYaw)/(n+0.01);
+    }
+
+    ROS_INFO("%f", fy);
+    m.pose.pose.position.z = 1+fy;
+
+    fixedPose_pub.publish(m);
+
+
+
 }
 
 void PositionVis::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg)

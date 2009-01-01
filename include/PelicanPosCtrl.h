@@ -54,6 +54,7 @@ private:
 
     std::vector<TooN::Vector<3> > p_pos;
     std::vector<TooN::Vector<4> > p_att;
+    std::vector<double> yaws;
 
     TooN::Vector<4> curGoal;
     TooN::Vector<3> curPos;
