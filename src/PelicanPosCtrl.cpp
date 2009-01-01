@@ -36,7 +36,7 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     velPub = nh.advertise<asctec_hl_comm::mav_ctrl>("/fcu/control", 1);
     atGoalPub = nh.advertise<std_msgs::Bool>("at_goal", 10);
 
-    fixedPosePub = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("fixedPose", 1);
+    fixedPosePub = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("fixedPose", 100);
 
     curCtrl = makeVector(0,0,0,0);
 
@@ -171,7 +171,7 @@ void PelicanPosCtrl::magCallback(const geometry_msgs::Vector3Stamped::Ptr &msg)
         curYaw -= 2*3.14;
 
     yaws.push_back(curYaw);
-    if(yaws.size()>10)
+    if(yaws.size()>50)
     {
         yaws.erase(yaws.begin());
     }
@@ -183,8 +183,23 @@ void PelicanPosCtrl::magCallback(const geometry_msgs::Vector3Stamped::Ptr &msg)
     }
 
     curYaw /= yaws.size();
+   
+    /* geometry_msgs::PoseWithCovarianceStamped fixepose;
+    fixepose.pose.pose.position.x = curPos[0];
+    fixepose.pose.pose.position.y = curPos[1];
+    fixepose.pose.pose.position.z = curYaw;
 
-    ROS_INFO("**************** YAW: %f", curYaw);
+    tf::Quaternion q = tf::Quaternion(curYaw,0,0);
+
+    fixepose.pose.pose.orientation.x = q.x();
+    fixepose.pose.pose.orientation.y = q.y();
+    fixepose.pose.pose.orientation.z = q.z();
+    fixepose.pose.pose.orientation.w = q.w();
+
+    fixepose.header.stamp = msg->header.stamp;
+    fixedPosePub.publish(fixepose);
+*/
+  //  ROS_INFO("**************** YAW: %f", curYaw);
 }
 
 
