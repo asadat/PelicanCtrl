@@ -83,7 +83,7 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
 
     goalThr[X] = 1.5;
     goalThr[Y] = 1.5;
-    goalThr[Z] = 1.5;
+    goalThr[Z] = 0.0;
     goalThr[YAW] = 0.2;
 
     //SetCurGoal(orig);

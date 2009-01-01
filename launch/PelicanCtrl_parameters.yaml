@@ -1,3 +1,6 @@
+goal_thr_x: 1.5
+goal_thr_y: 1.5
+goal_thr_z: 0.0
 px: 0.47    
 dx: 0.2    
 ix: 0    
@@ -6,10 +9,13 @@ py: 0.47
 dy: 0.2    
 iy: 0    
 max_vy: 3.0    
-pz: 0.0    
-dz: 0    
-iz: 0    
-max_vz: 3.0    
+pz_d: 0.2    
+dz_d: 0.1    
+iz_d: 0
+pz_a: 0.3
+pz_d: 0.2
+iz_d: 0.0    
+max_vz: 2.0    
 p_yaw: 0.0    
 d_yaw: 0    
 i_yaw: 0   
