@@ -26,7 +26,7 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
 
     hasHoverPos = false;
     hover = false;
-    orig = makeVector(0,0,1);
+    orig = makeVector(0,0,0);
     gpsPose_sub = nh.subscribe("/fcu/gps_pose", 100, &PelicanPosCtrl::gpsPoseCallback, this);
     mag_sub = nh.subscribe("/fcu/mag", 10, &PelicanPosCtrl::magCallback, this);
 
@@ -40,7 +40,7 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
 
     curCtrl = makeVector(0,0,0,0);
 
-    curPos = makeVector(0,0,0);
+    curPos = makeVector(0,0,1);
     curYaw = 0;
     curGoal = makeVector(curPos[0], curPos[1], curPos[2], curYaw);
 

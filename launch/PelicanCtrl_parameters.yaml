@@ -13,7 +13,7 @@ pz_d: 0.2
 dz_d: 0.1    
 iz_d: 0
 pz_a: 0.3
-pz_a: 0.2
+dz_a: 0.2
 iz_a: 0.0    
 max_vz: 2.0    
 p_yaw: 0.0    
