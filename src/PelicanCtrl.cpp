@@ -23,7 +23,14 @@ int main(int argc, char ** argv)
 
   ros::Publisher pub;
 
-  if (argc == 1)
+  ros::Rate r(15);
+
+  while(ros::ok())
+  {
+	r.sleep();
+	ros::spinOnce();
+  }
+/*  if (argc == 1)
   {
     ROS_ERROR("Wrong number of arguments!!!");
     usage();
@@ -104,6 +111,6 @@ int main(int argc, char ** argv)
 
     ros::spinOnce();
   }
-
+*/
   return 0;
 }
