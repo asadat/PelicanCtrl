@@ -234,7 +234,8 @@ void PelicanPosCtrl::Update()
         velmsg.y = curCtrl[1];
         velmsg.z = curCtrl[2];
         velmsg.type = velmsg.velocity;
-
+        velmsg.v_max_xy = -1;
+	velmsg.v_max_z   = -1;
         velPub.publish(velmsg);
     }
 
