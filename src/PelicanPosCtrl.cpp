@@ -261,6 +261,8 @@ void PelicanPosCtrl::Update()
 
         if(i == Z) // set the correct PID gains for ascending/descending
         {
+            ROS_INFO("Asc:%d ERR:%f",ascending,err_4D[i] );
+
             if(ascending && err_4D[i] > 0)
             {
                 ascending = false;
