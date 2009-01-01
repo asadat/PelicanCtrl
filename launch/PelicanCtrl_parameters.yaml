@@ -1,7 +1,7 @@
-goal_thr_x: 0.5
-goal_thr_y: 0.5
-goal_thr_z: 0.0
-goal_thr_yaw: 0.1
+goal_thr_x: 1.0
+goal_thr_y: 1.0
+goal_thr_z: 1.0
+goal_thr_yaw: 0.3
 px: 0.47    
 dx: 0.2    
 ix: 0    
@@ -16,9 +16,9 @@ iz_d: 0
 pz_a: 0.3
 dz_a: 0.2
 iz_a: 0.0    
-max_vz: 2.0    
-p_yaw: 0.4    
-d_yaw: 0.2    
+max_vz: 1.5    
+p_yaw: 0.2    
+d_yaw: 0.1    
 i_yaw: 0
 max_vyaw: 0.5   
-
+small_xyz_v: 0.5
