@@ -17,8 +17,8 @@ pz_a: 0.3
 dz_a: 0.2
 iz_a: 0.0    
 max_vz: 2.0    
-p_yaw: 0.2    
-d_yaw: 0.1    
+p_yaw: 0.4    
+d_yaw: 0.2    
 i_yaw: 0
 max_vyaw: 0.5   
 
