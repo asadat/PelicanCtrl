@@ -88,6 +88,7 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     nh.param<double>("goal_thr_x",goalThr[X], 1.5);
     nh.param<double>("goal_thr_y",goalThr[Y], 1.5);
     nh.param<double>("goal_thr_z",goalThr[Z], 0);
+    ROS_INFO("goal reached thresholds: %f %f %f", goalThr[X],goalThr[Y],goalThr[Z]);
     //goalThr[X] = 1.5;
     //goalThr[Y] = 1.5;
     //goalThr[Z] = 0.0;
@@ -264,13 +265,13 @@ void PelicanPosCtrl::Update()
             {
                 ascending = false;
                 pid[i].setGains(pidz_d[0],pidz_d[2],pidz_d[1],0,-0);
-                ROS_INFO("Descending: %f %f %f",pidz_d[0],pidz_d[2],pidz_d[1]);
+                ROS_INFO("Descending: %f %f %f",pidz_d[0],pidz_d[1],pidz_d[2]);
             }
             else if(!ascending && err_4D[i] < 0)
             {
                 ascending = true;
                 pid[i].setGains(pidz_a[0],pidz_a[2],pidz_a[1],0,-0);
-                ROS_INFO("Ascending: %f %f %f",pidz_a[0],pidz_a[2],pidz_a[1]);
+                ROS_INFO("Ascending: %f %f %f",pidz_a[0],pidz_a[1],pidz_a[2]);
             }
         }
 
