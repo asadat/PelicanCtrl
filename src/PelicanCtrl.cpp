@@ -19,7 +19,7 @@ void usage()
 bool start_log(PelicanCtrl::start_logRequest &req, PelicanCtrl::start_logResponse &res)
 {
     ROS_INFO("Service Called ................");
-    system("source ~/mountFlashDisk.sh");
+    system("~/log.sh");
    // system("source /media/startlog.sh");
     return true;
 }
