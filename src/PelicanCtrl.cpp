@@ -6,6 +6,7 @@
 #include <ros/ros.h>
 #include <asctec_hl_comm/mav_ctrl.h>
 #include <asctec_hl_comm/mav_ctrl_motors.h>
+#include "PelicanCtrl/start_log.h"
 
 void usage()
 {
@@ -15,21 +16,30 @@ void usage()
   std::cout << text << std::endl;
 }
 
+bool start_log(PelicanCtrl::start_logRequest &req, PelicanCtrl::start_logResponse &res)
+{
+    ROS_INFO("Service Called ................");
+    return true;
+}
+
 int main(int argc, char ** argv)
 {
 
-  ros::init(argc, argv, "interfacetest");
+  ros::init(argc, argv, "PelicanCtrl");
   ros::NodeHandle nh;
 
-  ros::Publisher pub;
+  //ros::Publisher pub;
+  ros::ServiceServer service = nh.advertiseService("start_log", start_log);
 
-  ros::Rate r(15);
+  ros::spin();
 
-  while(ros::ok())
-  {
-	r.sleep();
-	ros::spinOnce();
-  }
+//  ros::Rate r(15);
+
+//  while(ros::ok())
+//  {
+//	r.sleep();
+//	ros::spinOnce();
+//  }
 /*  if (argc == 1)
   {
     ROS_ERROR("Wrong number of arguments!!!");
