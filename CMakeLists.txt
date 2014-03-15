@@ -15,12 +15,14 @@ rosbuild_init()
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+set(PositionVis_LIBRARIES GL GLU glut)
 
 #uncomment if you have defined messages
 #rosbuild_genmsg()
 #uncomment if you have defined services
 rosbuild_gensrv()
-
+include_directories("./inlcude")
+include_directories("~")
 #common commands for building c++ executables and libraries
 #rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
 #target_link_libraries(${PROJECT_NAME} another_library)
@@ -30,4 +32,9 @@ rosbuild_add_executable(PelicanCtrl
 src/PelicanCtrl.cpp
 src/LoggingService.cpp
 )
-#target_link_libraries(example ${PROJECT_NAME})
+
+rosbuild_add_executable(PositionVis
+include/PositionVis.h
+src/PositionVis.cpp
+)
+target_link_libraries(PositionVis ${PositionVis_LIBRARIES})
