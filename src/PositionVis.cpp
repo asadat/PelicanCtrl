@@ -11,6 +11,7 @@
 #include <ros/ros.h>
 #include <asctec_hl_comm/mav_ctrl.h>
 #include <asctec_hl_comm/mav_ctrl_motors.h>
+#include "tf/transform_datatypes.h"
 
 using namespace TooN;
 
@@ -53,6 +54,7 @@ void rotateCamera(double yaw, double pitch, double roll)
 void update_event(int ms)
 {
    // static FeatureTracker featureTracker(makeVector(0,0,3));
+
 
     static bool firsttime =true;
 
@@ -123,7 +125,8 @@ void update_event(int ms)
 
 void idle_event()
 {
-    PositionVis::Instance()->idle();
+ PositionVis::Instance()->idle();
+
     //if(!ros::ok())
     // exit(0);
 }
@@ -132,8 +135,7 @@ void idle_event()
 
 void render_event()
 {
-
-
+    ROS_INFO_THROTTLE(0.5,"gl rendering ...");
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // reset camera
@@ -260,6 +262,8 @@ PositionVis::PositionVis(int argc, char **argv)
 
 
     gpsPos_sub = nh.subscribe("/fcu/gps_position", 100, &PositionVis::gpsPositionCallback, this);
+    gpsPose_sub = nh.subscribe("/fcu/gps_pose", 100, &PositionVis::gpsPoseCallback, this);
+
 
 
     glutInit(&argc, argv);
@@ -267,6 +271,24 @@ PositionVis::PositionVis(int argc, char **argv)
 
 PositionVis::~PositionVis()
 {
+
+}
+void PositionVis::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg)
+{
+    Vector<3> p;
+    p[0] = msg->pose.pose.position.x;
+    p[1] = msg->pose.pose.position.y;
+    p[2] = msg->pose.pose.position.z;
+
+    p_pos.push_back(p);
+
+    Vector<4> att;
+    att[0] = msg->pose.pose.orientation.x;
+    att[1] = msg->pose.pose.orientation.y;
+    att[2] = msg->pose.pose.orientation.z;
+    att[3] = msg->pose.pose.orientation.w;
+
+    p_att.push_back(att);
 
 }
 
@@ -302,20 +324,62 @@ void PositionVis::glDraw()
      glEnd();
 
 
-    glPointSize(5);
-    glBegin(GL_POINTS);
-    for(int i=0; i<positions.size(); i++)
-    {
-        float c = ((float)(i))/positions.size();
-        glColor3f(1-c, 1-c, 1-c);
-        glVertex3f(positions[i][0], positions[i][1], 10+positions[i][2]);
-    }
-    glEnd();
+//    glPointSize(5);
+//    glBegin(GL_POINTS);
+//    for(int i=0; i<positions.size(); i++)
+//    {
+//        float c = ((float)(i))/positions.size();
+//        glColor3f(1-c, 1-c, 1-c);
+//        glVertex3f(positions[i][0], positions[i][1], 10+positions[i][2]);
+//    }
+//    glEnd();
+
+     glPointSize(5);
+     glBegin(GL_POINTS);
+     for(int i=0; i<p_pos.size(); i++)
+     {
+         float c = ((float)(i))/positions.size();
+         glColor3f(1-c, 1-c, 1-c);
+         glVertex3f(p_pos[i][0], p_pos[i][1], 10+p_pos[i][2]);
+     }
+     glEnd();
+
+     if(!p_pos.empty())
+     {
+
+         glLineWidth(3);
+         glBegin(GL_LINES);
+         glColor3f(1,0,0);
+
+         Vector<3> ep = makeVector(1,0,0);
+         Vector<3> p = p_pos.back();
+         Vector<4> q = p_att.back();
+         tf::Quaternion qu(q[0], q[1], q[2], q[3]);
+         tf::Matrix3x3 m(qu);
+         Matrix<3> rot;
+         rot[0][0] = m[0][0]; rot[1][0] = m[1][0]; rot[2][0] = m[2][0];
+         rot[0][1] = m[0][1]; rot[1][1] = m[1][1]; rot[2][1] = m[2][1];
+         rot[0][2] = m[0][2]; rot[1][2] = m[1][2]; rot[2][2] = m[2][2];
+
+         ep = rot*ep+p;
+         glVertex3f(p[0], p[1], 10+p[2]);
+         glVertex3f(ep[0], ep[1], 10+ep[2]);
+
+         ep = rot*makeVector(0,1,0)+p;
+         glVertex3f(p[0], p[1], 10+p[2]);
+         glVertex3f(ep[0], ep[1], 10+ep[2]);
+
+         ep = rot*makeVector(0,0,1)+p;
+         glVertex3f(p[0], p[1], 10+p[2]);
+         glVertex3f(ep[0], ep[1], 10+ep[2]);
+
+         glEnd();
+     }
 }
 
 void PositionVis::hanldeKeyPressed(std::map<unsigned char, bool> &key, bool &updateKey)
 {
-//    updateKey = true;
+    updateKey = true;
 
 //    if(key['`'])
 //    {
@@ -329,6 +393,7 @@ void PositionVis::idle()
 
     if(ros::ok())
     {
+        ROS_INFO_THROTTLE(0.5, "Ros spinning ...");
         ros::spinOnce();
     }
     else
@@ -343,7 +408,7 @@ void PositionVis::mainLoop()
 
     glutInitWindowSize(800, 600);
     glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH);
-    glutCreateWindow("SamplingSim");
+    glutCreateWindow("PositionVisualization");
     glClearColor(1,1,1,0);
     glEnable(GL_POINT_SMOOTH);
 
@@ -370,6 +435,7 @@ void PositionVis::mainLoop()
     rotateCamera(0,-1.57,0);
 
     // run glut
+    //ros::spin();
     glutMainLoop();
 
 //    while(true)

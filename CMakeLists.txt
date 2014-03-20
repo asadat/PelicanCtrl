@@ -22,6 +22,8 @@ set(PositionVis_LIBRARIES GL GLU glut)
 #uncomment if you have defined services
 rosbuild_gensrv()
 include_directories("./inlcude")
+#include_directories("~/tag")
+#link_directories("~/tag")
 include_directories("~")
 #common commands for building c++ executables and libraries
 #rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
@@ -37,4 +39,5 @@ rosbuild_add_executable(PositionVis
 include/PositionVis.h
 src/PositionVis.cpp
 )
-target_link_libraries(PositionVis ${PositionVis_LIBRARIES})
+target_link_libraries(PositionVis  ${PositionVis_LIBRARIES})
+
