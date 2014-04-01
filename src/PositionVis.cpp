@@ -135,7 +135,7 @@ void idle_event()
 
 void render_event()
 {
-    ROS_INFO_THROTTLE(0.5,"gl rendering ...");
+    //ROS_INFO_THROTTLE(0.5,"gl rendering ...");
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // reset camera
@@ -290,6 +290,16 @@ void PositionVis::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped
 
     p_att.push_back(att);
 
+    tf::Quaternion qu(att[0], att[1], att[2], att[3]);
+//    tf::Matrix3x3 m(qu);
+//    Matrix<3> rot;
+//    rot[0][0] = m[0][0]; rot[1][0] = m[1][0]; rot[2][0] = m[2][0];
+//    rot[0][1] = m[0][1]; rot[1][1] = m[1][1]; rot[2][1] = m[2][1];
+//    rot[0][2] = m[0][2]; rot[1][2] = m[1][2]; rot[2][2] = m[2][2];
+    double yaw = tf::getYaw(msg->pose.pose.orientation);
+    ROS_INFO_THROTTLE(1,"Yaw:\t%f\n", yaw*180/3.14);
+
+
 }
 
 void PositionVis::gpsPositionCallback(const asctec_hl_comm::PositionWithCovarianceStamped::Ptr &msg)
@@ -393,7 +403,7 @@ void PositionVis::idle()
 
     if(ros::ok())
     {
-        ROS_INFO_THROTTLE(0.5, "Ros spinning ...");
+       // ROS_INFO_THROTTLE(0.5, "Ros spinning ...");
         ros::spinOnce();
     }
     else
