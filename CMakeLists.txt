@@ -33,6 +33,7 @@ include_directories("~")
 rosbuild_add_executable(PelicanCtrl 
 src/PelicanCtrl.cpp
 src/LoggingService.cpp
+include/PelicanCtrl.h
 )
 
 rosbuild_add_executable(PositionVis

@@ -260,7 +260,7 @@ void keyboard_up_event(unsigned char key, int x, int y)
 PositionVis::PositionVis(int argc, char **argv)
 {
 
-
+    initYaw = 0;
     gpsPos_sub = nh.subscribe("/fcu/gps_position", 100, &PositionVis::gpsPositionCallback, this);
     gpsPose_sub = nh.subscribe("/fcu/gps_pose", 100, &PositionVis::gpsPoseCallback, this);
 
@@ -273,12 +273,17 @@ PositionVis::~PositionVis()
 {
 
 }
+
 void PositionVis::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg)
 {
+    static bool firstYaw = true;
     Vector<3> p;
     p[0] = msg->pose.pose.position.x;
     p[1] = msg->pose.pose.position.y;
     p[2] = msg->pose.pose.position.z;
+
+    //if(p_pos.size() > 100)
+    //    p_pos.pop_back();
 
     p_pos.push_back(p);
 
@@ -287,6 +292,9 @@ void PositionVis::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped
     att[1] = msg->pose.pose.orientation.y;
     att[2] = msg->pose.pose.orientation.z;
     att[3] = msg->pose.pose.orientation.w;
+
+    //if(p_att.size() > 100)
+    //    p_att.pop_back();
 
     p_att.push_back(att);
 
@@ -297,7 +305,12 @@ void PositionVis::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped
 //    rot[0][1] = m[0][1]; rot[1][1] = m[1][1]; rot[2][1] = m[2][1];
 //    rot[0][2] = m[0][2]; rot[1][2] = m[1][2]; rot[2][2] = m[2][2];
     double yaw = tf::getYaw(msg->pose.pose.orientation);
-    ROS_INFO_THROTTLE(1,"Yaw:\t%f\n", yaw*180/3.14);
+    if(firstYaw)
+    {
+        initYaw = yaw;
+        firstYaw = false;
+    }
+    ROS_INFO_THROTTLE(1,"Yaw:\t%f\n", (yaw-initYaw)*180/3.14);
 
 
 }
@@ -344,7 +357,7 @@ void PositionVis::glDraw()
 //    }
 //    glEnd();
 
-     glPointSize(5);
+     glPointSize(2);
      glBegin(GL_POINTS);
      for(int i=0; i<p_pos.size(); i++)
      {
