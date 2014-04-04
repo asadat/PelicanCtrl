@@ -264,6 +264,7 @@ PositionVis::PositionVis(int argc, char **argv)
     gpsPos_sub = nh.subscribe("/fcu/gps_position", 100, &PositionVis::gpsPositionCallback, this);
     gpsPose_sub = nh.subscribe("/fcu/gps_pose", 100, &PositionVis::gpsPoseCallback, this);
 
+    velcmd_sub = nh.subscribe("vel_cmd", 100, &PositionVis::velCallback, this);
 
 
     glutInit(&argc, argv);
@@ -272,6 +273,13 @@ PositionVis::PositionVis(int argc, char **argv)
 PositionVis::~PositionVis()
 {
 
+}
+
+void PositionVis::velCallback(const geometry_msgs::Twist::Ptr &msg)
+{
+    vel[0] = msg->linear.x;
+    vel[1] = msg->linear.y;
+    vel[2] = msg->linear.z;
 }
 
 void PositionVis::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg)
@@ -330,7 +338,7 @@ void PositionVis::glDraw()
 {
      float w=10;
      glLineWidth(2);
-     glColor3f(0,0,0);
+     glColor4f(0,0,0,0.5);
      glBegin(GL_LINES);
      for(int i=0; i<=w; i++)
      {
@@ -357,13 +365,19 @@ void PositionVis::glDraw()
 //    }
 //    glEnd();
 
+     glPointSize(5);
+     glColor3f(1,0,0);
+     glBegin(GL_POINTS);
+     glVertex3f(0,0,0);
+     glEnd();
+
      glPointSize(2);
      glBegin(GL_POINTS);
      for(int i=0; i<p_pos.size(); i++)
      {
          float c = ((float)(i))/positions.size();
          glColor3f(1-c, 1-c, 1-c);
-         glVertex3f(p_pos[i][0], p_pos[i][1], 10+p_pos[i][2]);
+         glVertex3f(p_pos[i][0], p_pos[i][1], p_pos[i][2]);
      }
      glEnd();
 
@@ -385,16 +399,21 @@ void PositionVis::glDraw()
          rot[0][2] = m[0][2]; rot[1][2] = m[1][2]; rot[2][2] = m[2][2];
 
          ep = rot*ep+p;
-         glVertex3f(p[0], p[1], 10+p[2]);
-         glVertex3f(ep[0], ep[1], 10+ep[2]);
+         glVertex3f(p[0], p[1], p[2]);
+         glVertex3f(ep[0], ep[1], ep[2]);
 
          ep = rot*makeVector(0,1,0)+p;
-         glVertex3f(p[0], p[1], 10+p[2]);
-         glVertex3f(ep[0], ep[1], 10+ep[2]);
+         glVertex3f(p[0], p[1], p[2]);
+         glVertex3f(ep[0], ep[1], ep[2]);
 
          ep = rot*makeVector(0,0,1)+p;
-         glVertex3f(p[0], p[1], 10+p[2]);
-         glVertex3f(ep[0], ep[1], 10+ep[2]);
+         glVertex3f(p[0], p[1], p[2]);
+         glVertex3f(ep[0], ep[1], ep[2]);
+
+         glColor3f(0,1,0);
+         Vector<3> velDir = p + 5*vel;
+         glVertex3f(p[0], p[1], p[2]);
+         glVertex3f(velDir[0], velDir[1], velDir[2]);
 
          glEnd();
      }

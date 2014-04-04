@@ -31,9 +31,9 @@ include_directories("~")
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)
 rosbuild_add_executable(PelicanCtrl 
-src/PelicanCtrl.cpp
+src/PelicanPosCtrl.cpp
 src/LoggingService.cpp
-include/PelicanCtrl.h
+include/PelicanPosCtrl.h
 )
 
 rosbuild_add_executable(PositionVis
