@@ -10,6 +10,7 @@
 #include "PelicanPosCtrl.h"
 #include "TooN/TooN.h"
 #include "tf/tf.h"
+#include "std_msgs/Bool.h"
 
 #define CUTOFF(a,b,c) (a<b)?b:(a>c?c:a)
 
@@ -17,9 +18,11 @@ using namespace TooN;
 
 PelicanPosCtrl* PelicanPosCtrl::instance = NULL;
 
-PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv)
+PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
 {
 
+    hasHoverPos = false;
+    hover = false;
     initYaw = 0;
     gpsPos_sub = nh.subscribe("/fcu/gps_position", 100, &PelicanPosCtrl::gpsPositionCallback, this);
     gpsPose_sub = nh.subscribe("/fcu/gps_pose", 100, &PelicanPosCtrl::gpsPoseCallback, this);
@@ -27,10 +30,12 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv)
     gotoService = nh.advertiseService("gotoPos", &PelicanPosCtrl::GoToPosServiceCall, this);
 
     velPub = nh.advertise<geometry_msgs::Twist>("vel_cmd", 100);
+    atGoalPub = nh.advertise<std_msgs::Bool>("at_goal", 10);
 
     curCtrl = makeVector(0,0,0,0);
 
     curPos = makeVector(0,0,0,0);
+    curGoal = curPos;
 
     pid[X].initPid(0.1, 0, 0, 0, -0);
     pid[Y].initPid(0.1, 0, 0, 0, -0);
@@ -115,42 +120,65 @@ void PelicanPosCtrl::gpsPositionCallback(const asctec_hl_comm::PositionWithCovar
 
 void PelicanPosCtrl::SetCurGoal(TooN::Vector<4> p)
 {
+    hasHoverPos = true;
+    hover = false;
     curGoal = p;
+}
+void PelicanPosCtrl::OnReachedGoal()
+{
+   std_msgs::Bool atgoal;
+   atgoal.data = true;
+   atGoalPub.publish(atgoal);
+   hover = true;
 }
 
 void PelicanPosCtrl::Update()
 {
+    if(!hasHoverPos)
+        return;
+
     static ros::Time lastTime = ros::Time::now();
     ros::Time curTime = ros::Time::now();
     ros::Duration dt = lastTime-curTime;
     lastTime = curTime;
 
+    bool zeroCtrl = true;
+
     Vector<4> err_4D;
     for(int i=0; i<YAW; i++)
     {
-        err_4D[i] = curPos[i]-curGoal[i];
+        err_4D[i] = curGoal[i]-curPos[i];
         err_4D[i] = CUTOFF(err_4D[i], -goalThr[i], goalThr[i]);
 
-        curCtrl[i] = pid[i].updatePid(err_4D[i], dt);
+        zeroCtrl = zeroCtrl && (err_4D[i]==0);
+
+        curCtrl[i] = pid[i].computeCommand(err_4D[i], dt);
         CUTOFF(curCtrl[i], -ctrlCutoff[i], ctrlCutoff[i]);
     }
 
-    //ROS_INFO_THROTTLE(5, "ERR: %f\t%f\t%f\t%f dt: %f", err_4D[0], err_4D[1], err_4D[2], err_4D[3], dt.toSec());
-    ROS_INFO_THROTTLE(5, "CTRL: %f\t%f\t%f\t%f dt: %f", curCtrl[0], curCtrl[1], curCtrl[2], curCtrl[3], dt.toSec());
+    if(zeroCtrl && !hover)
+    {
+        OnReachedGoal();
+    }
+    else
+    {
+        //ROS_INFO_THROTTLE(5, "ERR: %f\t%f\t%f\t%f dt: %f", err_4D[0], err_4D[1], err_4D[2], err_4D[3], dt.toSec());
+        ROS_INFO_THROTTLE(5, "CTRL: %f\t%f\t%f\t%f dt: %f", curCtrl[0], curCtrl[1], curCtrl[2], curCtrl[3], dt.toSec());
 
-    geometry_msgs::Twist velmsg;
-    velmsg.linear.x = curCtrl[0];
-    velmsg.linear.y = curCtrl[1];
-    velmsg.linear.z = curCtrl[2];
+        geometry_msgs::Twist velmsg;
+        velmsg.linear.x = curCtrl[0];
+        velmsg.linear.y = curCtrl[1];
+        velmsg.linear.z = curCtrl[2];
 
-    velPub.publish(velmsg);
+        velPub.publish(velmsg);
+    }
 
 }
 
 bool start_log(PelicanCtrl::start_logRequest &req, PelicanCtrl::start_logResponse &res)
 {
     ROS_INFO("Service Called ................");
-    system("~/log.sh");
+    //system("~/log.sh");
    // system("source /media/startlog.sh");
     return true;
 }

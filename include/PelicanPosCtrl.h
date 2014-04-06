@@ -33,12 +33,14 @@ private:
     static PelicanPosCtrl* instance;
 
     void SetCurGoal(TooN::Vector<4> p);
+    void OnReachedGoal();
 
     ros::NodeHandle nh;
     ros::Subscriber gpsPos_sub;
     ros::Subscriber gpsPose_sub;
     ros::ServiceServer gotoService;
     ros::Publisher  velPub;
+    ros::Publisher atGoalPub;
 
     std::vector<TooN::Vector<3> > positions;
     std::vector<TooN::Vector<3> > p_pos;
@@ -52,6 +54,8 @@ private:
 
     double ctrlCutoff[NUM];
     double goalThr[NUM];
+    bool hover;
+    bool hasHoverPos;
 
     control_toolbox::Pid pid[NUM];
 };

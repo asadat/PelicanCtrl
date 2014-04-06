@@ -373,7 +373,7 @@ void PositionVis::glDraw()
 
      glPointSize(2);
      glBegin(GL_POINTS);
-     for(int i=0; i<p_pos.size(); i++)
+     for(unsigned int i=0; i<p_pos.size(); i++)
      {
          float c = ((float)(i))/positions.size();
          glColor3f(1-c, 1-c, 1-c);
