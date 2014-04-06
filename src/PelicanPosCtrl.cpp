@@ -147,12 +147,12 @@ void PelicanPosCtrl::Update()
     Vector<4> err_4D;
     for(int i=0; i<YAW; i++)
     {
-        err_4D[i] = curGoal[i]-curPos[i];
+        err_4D[i] = curPos[i]-curGoal[i];
         err_4D[i] = CUTOFF(err_4D[i], -goalThr[i], goalThr[i]);
 
         zeroCtrl = zeroCtrl && (err_4D[i]==0);
 
-        curCtrl[i] = pid[i].computeCommand(err_4D[i], dt);
+        curCtrl[i] = pid[i].updatePid(err_4D[i], dt);
         CUTOFF(curCtrl[i], -ctrlCutoff[i], ctrlCutoff[i]);
     }
 
