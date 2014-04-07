@@ -13,6 +13,7 @@
 #include "std_msgs/Bool.h"
 
 #define CUTOFF(a,b,c) (a<b)?b:(a>c?c:a)
+#define DEADZONE(a,b) ((fabs(a)<b)?0:a)
 
 using namespace TooN;
 
@@ -102,7 +103,7 @@ void PelicanPosCtrl::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStam
     Vector<4> pos = makeVector(p[0], p[1], p[2], yaw);
     curPos = pos;
 
-    ROS_INFO_THROTTLE(1,"Yaw:\t%f\n", (yaw)*180/3.14);
+    //ROS_INFO_THROTTLE(1,"Yaw:\t%f\n", (yaw)*180/3.14);
 
 
 }
@@ -134,8 +135,11 @@ void PelicanPosCtrl::OnReachedGoal()
 
 void PelicanPosCtrl::Update()
 {
+    ROS_INFO_THROTTLE(5,"Hover:%d",hover);
     if(!hasHoverPos)
         return;
+
+    ROS_INFO_THROTTLE(5,"goal:%f %f %f",curGoal[0],curGoal[1],curGoal[2]);
 
     static ros::Time lastTime = ros::Time::now();
     ros::Time curTime = ros::Time::now();
@@ -148,12 +152,12 @@ void PelicanPosCtrl::Update()
     for(int i=0; i<YAW; i++)
     {
         err_4D[i] = curPos[i]-curGoal[i];
-        err_4D[i] = CUTOFF(err_4D[i], -goalThr[i], goalThr[i]);
+        err_4D[i] = DEADZONE(err_4D[i], goalThr[i]);
 
-        zeroCtrl = zeroCtrl && (err_4D[i]==0);
+        zeroCtrl = zeroCtrl && (fabs(err_4D[i]) < 0.001);
 
         curCtrl[i] = pid[i].updatePid(err_4D[i], dt);
-        CUTOFF(curCtrl[i], -ctrlCutoff[i], ctrlCutoff[i]);
+        curCtrl[i] = CUTOFF(curCtrl[i], -ctrlCutoff[i], ctrlCutoff[i]);
     }
 
     if(zeroCtrl && !hover)
@@ -162,7 +166,7 @@ void PelicanPosCtrl::Update()
     }
     else
     {
-        //ROS_INFO_THROTTLE(5, "ERR: %f\t%f\t%f\t%f dt: %f", err_4D[0], err_4D[1], err_4D[2], err_4D[3], dt.toSec());
+        ROS_INFO_THROTTLE(5, "ERR: %f\t%f\t%f dt: %f", err_4D[0], err_4D[1], err_4D[2], dt.toSec());
         ROS_INFO_THROTTLE(5, "CTRL: %f\t%f\t%f\t%f dt: %f", curCtrl[0], curCtrl[1], curCtrl[2], curCtrl[3], dt.toSec());
 
         geometry_msgs::Twist velmsg;
