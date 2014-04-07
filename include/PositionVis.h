@@ -41,7 +41,7 @@ private:
     std::vector<TooN::Vector<3> > positions;
     std::vector<TooN::Vector<3> > p_pos;
     std::vector<TooN::Vector<4> > p_att;
-    double initYaw;
+    TooN::Vector<4> orig;
 
     TooN::Vector<3> vel;
 

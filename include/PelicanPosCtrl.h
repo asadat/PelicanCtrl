@@ -50,7 +50,8 @@ private:
     TooN::Vector<4> curPos;
     TooN::Vector<4> curCtrl;
 
-    double initYaw;
+    TooN::Vector<4> orig;
+
 
     double ctrlCutoff[NUM];
     double goalThr[NUM];

@@ -260,7 +260,7 @@ void keyboard_up_event(unsigned char key, int x, int y)
 PositionVis::PositionVis(int argc, char **argv)
 {
 
-    initYaw = 0;
+    orig = makeVector(0,0,0,0);
     gpsPos_sub = nh.subscribe("/fcu/gps_position", 100, &PositionVis::gpsPositionCallback, this);
     gpsPose_sub = nh.subscribe("/fcu/gps_pose", 100, &PositionVis::gpsPoseCallback, this);
 
@@ -284,14 +284,12 @@ void PositionVis::velCallback(const geometry_msgs::Twist::Ptr &msg)
 
 void PositionVis::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg)
 {
-    static bool firstYaw = true;
+    static bool firstgpPose = true;
     Vector<3> p;
     p[0] = msg->pose.pose.position.x;
     p[1] = msg->pose.pose.position.y;
     p[2] = msg->pose.pose.position.z;
 
-    //if(p_pos.size() > 100)
-    //    p_pos.pop_back();
 
     p_pos.push_back(p);
 
@@ -301,24 +299,19 @@ void PositionVis::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped
     att[2] = msg->pose.pose.orientation.z;
     att[3] = msg->pose.pose.orientation.w;
 
-    //if(p_att.size() > 100)
-    //    p_att.pop_back();
 
     p_att.push_back(att);
 
-    tf::Quaternion qu(att[0], att[1], att[2], att[3]);
-//    tf::Matrix3x3 m(qu);
-//    Matrix<3> rot;
-//    rot[0][0] = m[0][0]; rot[1][0] = m[1][0]; rot[2][0] = m[2][0];
-//    rot[0][1] = m[0][1]; rot[1][1] = m[1][1]; rot[2][1] = m[2][1];
-//    rot[0][2] = m[0][2]; rot[1][2] = m[1][2]; rot[2][2] = m[2][2];
     double yaw = tf::getYaw(msg->pose.pose.orientation);
-    if(firstYaw)
+
+
+    Vector<4> pos = makeVector(p[0], p[1], p[2], yaw);
+
+    if(firstgpPose)
     {
-        initYaw = yaw;
-        firstYaw = false;
+        orig = pos;
+        firstgpPose = false;
     }
-    ROS_INFO_THROTTLE(1,"Yaw:\t%f\n", (yaw-initYaw)*180/3.14);
 
 
 }
@@ -377,7 +370,7 @@ void PositionVis::glDraw()
      {
          float c = ((float)(i))/positions.size();
          glColor3f(1-c, 1-c, 1-c);
-         glVertex3f(p_pos[i][0], p_pos[i][1], p_pos[i][2]);
+         glVertex3f(p_pos[i][0]-orig[0], p_pos[i][1]-orig[1], p_pos[i][2]-orig[2]);
      }
      glEnd();
 
@@ -390,6 +383,10 @@ void PositionVis::glDraw()
 
          Vector<3> ep = makeVector(1,0,0);
          Vector<3> p = p_pos.back();
+         p[0] -= orig[0];
+         p[1] -= orig[1];
+         p[2] -= orig[2];
+
          Vector<4> q = p_att.back();
          tf::Quaternion qu(q[0], q[1], q[2], q[3]);
          tf::Matrix3x3 m(qu);

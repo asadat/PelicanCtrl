@@ -24,7 +24,7 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
 
     hasHoverPos = false;
     hover = false;
-    initYaw = 0;
+    orig = makeVector(0,0,0,0);
     gpsPos_sub = nh.subscribe("/fcu/gps_position", 100, &PelicanPosCtrl::gpsPositionCallback, this);
     gpsPose_sub = nh.subscribe("/fcu/gps_pose", 100, &PelicanPosCtrl::gpsPoseCallback, this);
 
@@ -68,7 +68,7 @@ bool PelicanPosCtrl::GoToPosServiceCall(PelicanCtrl::gotoPosRequest &req, Pelica
 
 void PelicanPosCtrl::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg)
 {
-    static bool firstYaw = true;
+    static bool firstgpPose = true;
     Vector<3> p;
     p[0] = msg->pose.pose.position.x;
     p[1] = msg->pose.pose.position.y;
@@ -91,19 +91,19 @@ void PelicanPosCtrl::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStam
     p_att.push_back(att);
 
     double yaw = tf::getYaw(msg->pose.pose.orientation);
-    if(firstYaw)
-    {
-        initYaw = yaw;
-        firstYaw = false;
-    }
-
-    yaw = yaw - initYaw;
 
 
     Vector<4> pos = makeVector(p[0], p[1], p[2], yaw);
-    curPos = pos;
 
-    //ROS_INFO_THROTTLE(1,"Yaw:\t%f\n", (yaw)*180/3.14);
+    if(firstgpPose)
+    {
+        orig = pos;
+        firstgpPose = false;
+    }
+
+    curPos = pos-orig;
+
+    ROS_INFO_THROTTLE(4,"POSE: %f\t%f\t%f\t%f ", curPos[0], curPos[1], curPos[2], (curPos[3])*180/3.14);
 
 
 }
