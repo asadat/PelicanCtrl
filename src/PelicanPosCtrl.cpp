@@ -11,6 +11,7 @@
 #include "TooN/TooN.h"
 #include "tf/tf.h"
 #include "std_msgs/Bool.h"
+#include "geometry_msgs/PoseWithCovarianceStamped.h"
 
 #define CUTOFF(a,b,c) (a<b)?b:(a>c?c:a)
 #define DEADZONE(a,b) ((fabs(a)<b)?0:a)
@@ -32,6 +33,8 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
 
     velPub = nh.advertise<geometry_msgs::Twist>("vel_cmd", 100);
     atGoalPub = nh.advertise<std_msgs::Bool>("at_goal", 10);
+
+    fixedPosePub = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("fixedPose", 1);
 
     curCtrl = makeVector(0,0,0,0);
 
@@ -102,6 +105,14 @@ void PelicanPosCtrl::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStam
     }
 
     curPos = pos-orig;
+
+    geometry_msgs::PoseWithCovarianceStamped fixepose;
+    fixepose.pose.pose.position.x = curPos[0];
+    fixepose.pose.pose.position.y = curPos[1];
+    fixepose.pose.pose.position.z = curPos[2];
+
+    fixedPosePub.publish(fixepose);
+
 
     ROS_INFO_THROTTLE(4,"POSE: %f\t%f\t%f\t%f ", curPos[0], curPos[1], curPos[2], (curPos[3])*180/3.14);
 

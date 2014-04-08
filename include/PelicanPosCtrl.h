@@ -41,6 +41,7 @@ private:
     ros::ServiceServer gotoService;
     ros::Publisher  velPub;
     ros::Publisher atGoalPub;
+    ros::Publisher fixedPosePub;
 
     std::vector<TooN::Vector<3> > positions;
     std::vector<TooN::Vector<3> > p_pos;
