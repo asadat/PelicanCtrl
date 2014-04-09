@@ -4,6 +4,7 @@
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "PelicanCtrl/gotoPos.h"
 #include "control_toolbox/pid.h"
+#include "PelicanCtrl/hover.h"
 
 class PelicanPosCtrl
 {
@@ -26,6 +27,7 @@ public:
     void gpsPositionCallback(const asctec_hl_comm::PositionWithCovarianceStamped::Ptr &msg);
     void gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg);
     bool GoToPosServiceCall(PelicanCtrl::gotoPosRequest &req, PelicanCtrl::gotoPosResponse &res);
+    bool HoverServiceCall(PelicanCtrl::hoverRequest &req, PelicanCtrl::hoverResponse &res);
 
 private:
 

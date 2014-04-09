@@ -70,6 +70,16 @@ bool PelicanPosCtrl::GoToPosServiceCall(PelicanCtrl::gotoPosRequest &req, Pelica
     return true;
 }
 
+bool PelicanPosCtrl::HoverServiceCall(PelicanCtrl::hoverRequest &req, PelicanCtrl::hoverResponse &res)
+{
+    if(!hasHoverPos)
+        return false;
+
+    curGoal = curPos;
+    return true;
+}
+
+
 void PelicanPosCtrl::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg)
 {
     static bool firstgpPose = true;
