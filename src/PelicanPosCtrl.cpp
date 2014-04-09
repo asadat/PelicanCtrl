@@ -31,6 +31,7 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     gpsPose_sub = nh.subscribe("/fcu/gps_pose", 100, &PelicanPosCtrl::gpsPoseCallback, this);
 
     gotoService = nh.advertiseService("gotoPos", &PelicanPosCtrl::GoToPosServiceCall, this);
+    hoverService = nh.advertiseService("hover", &PelicanPosCtrl::HoverServiceCall, this);
 
     velPub = nh.advertise<asctec_hl_comm::mav_ctrl>("vel_cmd", 100);
     atGoalPub = nh.advertise<std_msgs::Bool>("at_goal", 10);

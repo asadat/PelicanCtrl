@@ -41,6 +41,8 @@ private:
     ros::Subscriber gpsPos_sub;
     ros::Subscriber gpsPose_sub;
     ros::ServiceServer gotoService;
+    ros::ServiceServer hoverService;
+
     ros::Publisher  velPub;
     ros::Publisher atGoalPub;
     ros::Publisher fixedPosePub;
