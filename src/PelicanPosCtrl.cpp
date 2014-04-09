@@ -13,6 +13,7 @@
 #include "std_msgs/Bool.h"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 
+
 #define CUTOFF(a,b,c) (a<b)?b:(a>c?c:a)
 #define DEADZONE(a,b) ((fabs(a)<b)?0:a)
 
@@ -31,7 +32,7 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
 
     gotoService = nh.advertiseService("gotoPos", &PelicanPosCtrl::GoToPosServiceCall, this);
 
-    velPub = nh.advertise<geometry_msgs::Twist>("vel_cmd", 100);
+    velPub = nh.advertise<asctec_hl_comm::mav_ctrl>("vel_cmd", 100);
     atGoalPub = nh.advertise<std_msgs::Bool>("at_goal", 10);
 
     fixedPosePub = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("fixedPose", 1);
@@ -46,14 +47,14 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     pid[Z].initPid(0.1, 0, 0, 0, -0);
     pid[YAW].initPid(0.1, 0, 0, 0, -0);
 
-    ctrlCutoff[X] = 0.3;
-    ctrlCutoff[Y] = 0.3;
-    ctrlCutoff[Z] = 0.3;
-    ctrlCutoff[YAW] = 0.3;
+    ctrlCutoff[X] = 0.1;
+    ctrlCutoff[Y] = 0.1;
+    ctrlCutoff[Z] = 0.1;
+    ctrlCutoff[YAW] = 0.1;
 
-    goalThr[X] = 2;
-    goalThr[Y] = 2;
-    goalThr[Z] = 2;
+    goalThr[X] = 1;
+    goalThr[Y] = 1;
+    goalThr[Z] = 1;
     goalThr[YAW] = 0.2;
 }
 
@@ -180,10 +181,15 @@ void PelicanPosCtrl::Update()
         ROS_INFO_THROTTLE(5, "ERR: %f\t%f\t%f dt: %f", err_4D[0], err_4D[1], err_4D[2], dt.toSec());
         ROS_INFO_THROTTLE(5, "CTRL: %f\t%f\t%f\t%f dt: %f", curCtrl[0], curCtrl[1], curCtrl[2], curCtrl[3], dt.toSec());
 
-        geometry_msgs::Twist velmsg;
-        velmsg.linear.x = curCtrl[0];
-        velmsg.linear.y = curCtrl[1];
-        velmsg.linear.z = curCtrl[2];
+//        geometry_msgs::Twist velmsg;
+//        velmsg.linear.x = curCtrl[0];
+//        velmsg.linear.y = curCtrl[1];
+//        velmsg.linear.z = curCtrl[2];
+        asctec_hl_comm::mav_ctrl velmsg;
+        velmsg.x = curCtrl[0];
+        velmsg.y = curCtrl[1];
+        velmsg.z = curCtrl[2];
+        velmsg.type = velmsg.velocity;
 
         velPub.publish(velmsg);
     }
