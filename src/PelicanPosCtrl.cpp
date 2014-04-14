@@ -43,19 +43,42 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     curPos = makeVector(0,0,0,0);
     curGoal = curPos;
 
-    pid[X].initPid(0.1, 0, 0, 0, -0);
-    pid[Y].initPid(0.1, 0, 0, 0, -0);
-    pid[Z].initPid(0.1, 0, 0, 0, -0);
-    pid[YAW].initPid(0.1, 0, 0, 0, -0);
+    double pidx[3];
+    double pidy[3];
+    double pidz[3];
+    double pid_yaw[3];
 
-    ctrlCutoff[X] = 0.1;
-    ctrlCutoff[Y] = 0.1;
-    ctrlCutoff[Z] = 0.1;
+    nh.param<double>("px",pidx[0], 0.01);
+    nh.param<double>("dx",pidx[1], 0.0);
+    nh.param<double>("ix",pidx[2], 0.0);
+
+    nh.param<double>("py",pidy[0], 0.01);
+    nh.param<double>("dy",pidy[1], 0.0);
+    nh.param<double>("iy",pidy[2], 0.0);
+
+    nh.param<double>("pz",pidz[0], 0.01);
+    nh.param<double>("dz",pidz[1], 0.0);
+    nh.param<double>("iz",pidz[2], 0.0);
+
+    nh.param<double>("p_yaw",pid_yaw[0], 0.01);
+    nh.param<double>("d_yaw",pid_yaw[1], 0.0);
+    nh.param<double>("i_yaw",pid_yaw[2], 0.0);
+
+    //ROS_INFO("ctrl: %f %f %f %f", pidx[0], pidy[0], pidz[0], pid_yaw[0]);
+
+    pid[X].initPid(pidx[0],pidx[2], pidx[1], 0, -0);
+    pid[Y].initPid(pidy[0],pidy[2], pidy[1], 0, -0);
+    pid[Z].initPid(pidz[0],pidz[2], pidz[1], 0, -0);
+    pid[YAW].initPid(pid_yaw[0],pid_yaw[2], pid_yaw[1], 0, -0);
+
+    ctrlCutoff[X] = 0.05;
+    ctrlCutoff[Y] = 0.05;
+    ctrlCutoff[Z] = 0.05;
     ctrlCutoff[YAW] = 0.1;
 
-    goalThr[X] = 1;
-    goalThr[Y] = 1;
-    goalThr[Z] = 1;
+    goalThr[X] = 1.5;
+    goalThr[Y] = 1.5;
+    goalThr[Z] = 1.5;
     goalThr[YAW] = 0.2;
 }
 

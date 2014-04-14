@@ -1,0 +1,27 @@
+<launch>
+    <node name="PelicanCtrl" pkg="PelicanCtrl" type="PelicanCtrl" clear_params="true" output="screen" args="-real -b 2">
+	      
+	      <param name="~px" value="0.15" />
+	      <param name="~dx" value="0" />
+	      <param name="~ix" value="0" />
+	      	      
+   	      <param name="~py" value="0.15" />
+	      <param name="~dy" value="0" />
+	      <param name="~iy" value="0" />
+
+	      <param name="~pz" value="0.15" />
+	      <param name="~dz" value="0" />
+	      <param name="~iz" value="0" />
+	      
+   	      <param name="~p_yaw" value="0.15" />
+	      <param name="~d_yaw" value="0" />
+	      <param name="~i_yaw" value="0" />
+
+
+	      <!--  <remap to="at_goal" from="/PelicanCtrl/at_goal" /> -->
+          <!--  <remap from="fixedPose" to="/PelicanCtrl/fixedPose" /> -->
+          
+ 
+    </node>
+</launch>
+
