@@ -37,6 +37,8 @@ private:
     void SetCurGoal(TooN::Vector<4> p);
     void OnReachedGoal();
 
+    void TransformFromGlobal2Pelican(TooN::Vector<4> &curCtrl);
+
     ros::NodeHandle nh;
     ros::Subscriber gpsPos_sub;
     ros::Subscriber gpsPose_sub;

@@ -313,6 +313,7 @@ void PositionVis::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped
         firstgpPose = false;
     }
 
+    ROS_INFO("X: %f\t Y: %f\t Z: %f\t YAW: %f", pos[0], pos[1], pos[2], pos[3]*180/3.14);
 
 }
 

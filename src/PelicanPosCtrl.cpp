@@ -33,7 +33,7 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     gotoService = nh.advertiseService("gotoPos", &PelicanPosCtrl::GoToPosServiceCall, this);
     hoverService = nh.advertiseService("hover", &PelicanPosCtrl::HoverServiceCall, this);
 
-    velPub = nh.advertise<asctec_hl_comm::mav_ctrl>("vel_cmd", 100);
+    velPub = nh.advertise<asctec_hl_comm::mav_ctrl>("/fcu/control", 1);
     atGoalPub = nh.advertise<std_msgs::Bool>("at_goal", 10);
 
     fixedPosePub = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("fixedPose", 1);
@@ -71,8 +71,8 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     pid[Z].initPid(pidz[0],pidz[2], pidz[1], 0, -0);
     pid[YAW].initPid(pid_yaw[0],pid_yaw[2], pid_yaw[1], 0, -0);
 
-    ctrlCutoff[X] = 0.05;
-    ctrlCutoff[Y] = 0.05;
+    ctrlCutoff[X] = 0.5;
+    ctrlCutoff[Y] = 0.5;
     ctrlCutoff[Z] = 0.05;
     ctrlCutoff[YAW] = 0.1;
 
@@ -80,6 +80,8 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     goalThr[Y] = 1.5;
     goalThr[Z] = 1.5;
     goalThr[YAW] = 0.2;
+
+    SetCurGoal(orig);
 }
 
 bool PelicanPosCtrl::GoToPosServiceCall(PelicanCtrl::gotoPosRequest &req, PelicanCtrl::gotoPosResponse &res)
@@ -140,6 +142,7 @@ void PelicanPosCtrl::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStam
     }
 
     curPos = pos-orig;
+    curPos[3] += orig[3];
 
     geometry_msgs::PoseWithCovarianceStamped fixepose;
     fixepose.pose.pose.position.x = curPos[0];
@@ -212,13 +215,20 @@ void PelicanPosCtrl::Update()
     }
     else
     {
+
+        ROS_INFO_THROTTLE(5, "CTRL-W: %f\t%f\t%f\t%f dt: %f", curCtrl[0], curCtrl[1], curCtrl[2], curCtrl[3], dt.toSec());
+        TransformFromGlobal2Pelican(curCtrl);
         ROS_INFO_THROTTLE(5, "ERR: %f\t%f\t%f dt: %f", err_4D[0], err_4D[1], err_4D[2], dt.toSec());
-        ROS_INFO_THROTTLE(5, "CTRL: %f\t%f\t%f\t%f dt: %f", curCtrl[0], curCtrl[1], curCtrl[2], curCtrl[3], dt.toSec());
+        ROS_INFO_THROTTLE(5, "CTRL-P: %f\t%f\t%f\t%f dt: %f", curCtrl[0], curCtrl[1], curCtrl[2], curCtrl[3], dt.toSec());
 
 //        geometry_msgs::Twist velmsg;
 //        velmsg.linear.x = curCtrl[0];
 //        velmsg.linear.y = curCtrl[1];
 //        velmsg.linear.z = curCtrl[2];
+
+
+
+
         asctec_hl_comm::mav_ctrl velmsg;
         velmsg.x = curCtrl[0];
         velmsg.y = curCtrl[1];
@@ -228,6 +238,18 @@ void PelicanPosCtrl::Update()
         velPub.publish(velmsg);
     }
 
+}
+
+void PelicanPosCtrl::TransformFromGlobal2Pelican(Vector<4> &ctrl_cur)
+{
+    Vector<2> vxvy = makeVector(ctrl_cur[0], ctrl_cur[1]);
+    Matrix<2, 2, double> trans = Data(-cos(curPos[3]), -sin(curPos[3]),
+                                 -sin(curPos[3]), cos(curPos[3]));
+
+    vxvy = trans*vxvy;
+
+    ctrl_cur[0] = vxvy[0];
+    ctrl_cur[1] = vxvy[1];
 }
 
 bool start_log(PelicanCtrl::start_logRequest &req, PelicanCtrl::start_logResponse &res)
