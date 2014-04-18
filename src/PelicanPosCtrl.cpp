@@ -81,7 +81,7 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     goalThr[Z] = 1.5;
     goalThr[YAW] = 0.2;
 
-    SetCurGoal(orig);
+    //SetCurGoal(orig);
 }
 
 bool PelicanPosCtrl::GoToPosServiceCall(PelicanCtrl::gotoPosRequest &req, PelicanCtrl::gotoPosResponse &res)
