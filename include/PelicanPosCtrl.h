@@ -2,6 +2,7 @@
 #include "asctec_hl_comm/PositionWithCovarianceStamped.h"
 #include "TooN/TooN.h"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
+#include "geometry_msgs/Vector3Stamped.h"
 #include "PelicanCtrl/gotoPos.h"
 #include "control_toolbox/pid.h"
 #include "PelicanCtrl/hover.h"
@@ -24,6 +25,7 @@ public:
     }
 
     void Update();
+    void magCallback(const geometry_msgs::Vector3Stamped::Ptr &msg);
     void gpsPositionCallback(const asctec_hl_comm::PositionWithCovarianceStamped::Ptr &msg);
     void gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg);
     bool GoToPosServiceCall(PelicanCtrl::gotoPosRequest &req, PelicanCtrl::gotoPosResponse &res);
@@ -40,8 +42,9 @@ private:
     void TransformFromGlobal2Pelican(TooN::Vector<4> &curCtrl);
 
     ros::NodeHandle nh;
-    ros::Subscriber gpsPos_sub;
     ros::Subscriber gpsPose_sub;
+    ros::Subscriber mag_sub;
+
     ros::ServiceServer gotoService;
     ros::ServiceServer hoverService;
 
@@ -49,15 +52,15 @@ private:
     ros::Publisher atGoalPub;
     ros::Publisher fixedPosePub;
 
-    std::vector<TooN::Vector<3> > positions;
     std::vector<TooN::Vector<3> > p_pos;
     std::vector<TooN::Vector<4> > p_att;
 
     TooN::Vector<4> curGoal;
-    TooN::Vector<4> curPos;
+    TooN::Vector<3> curPos;
+    double curYaw;
     TooN::Vector<4> curCtrl;
 
-    TooN::Vector<4> orig;
+    TooN::Vector<3> orig;
 
 
     double ctrlCutoff[NUM];

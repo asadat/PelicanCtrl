@@ -8,7 +8,7 @@
 #include <asctec_hl_comm/mav_ctrl_motors.h>
 #include "PelicanCtrl/start_log.h"
 #include "PelicanPosCtrl.h"
-#include "TooN/TooN.h"
+//#include "TooN/TooN.h"
 #include "tf/tf.h"
 #include "std_msgs/Bool.h"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
@@ -26,9 +26,9 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
 
     hasHoverPos = false;
     hover = false;
-    orig = makeVector(0,0,0,0);
-    gpsPos_sub = nh.subscribe("/fcu/gps_position", 100, &PelicanPosCtrl::gpsPositionCallback, this);
+    orig = makeVector(0,0,0);
     gpsPose_sub = nh.subscribe("/fcu/gps_pose", 100, &PelicanPosCtrl::gpsPoseCallback, this);
+    mag_sub = nh.subscribe("/fcu/mag", 10, &PelicanPosCtrl::magCallback, this);
 
     gotoService = nh.advertiseService("gotoPos", &PelicanPosCtrl::GoToPosServiceCall, this);
     hoverService = nh.advertiseService("hover", &PelicanPosCtrl::HoverServiceCall, this);
@@ -40,8 +40,9 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
 
     curCtrl = makeVector(0,0,0,0);
 
-    curPos = makeVector(0,0,0,0);
-    curGoal = curPos;
+    curPos = makeVector(0,0,0);
+    curYaw = 0;
+    curGoal = makeVector(curPos[0], curPos[1], curPos[2], curYaw);
 
     double pidx[3];
     double pidy[3];
@@ -101,7 +102,7 @@ bool PelicanPosCtrl::HoverServiceCall(PelicanCtrl::hoverRequest &req, PelicanCtr
     if(!hasHoverPos)
         return false;
 
-    curGoal = curPos;
+    curGoal = makeVector(curPos[0],curPos[1],curPos[2],curYaw);
     return true;
 }
 
@@ -119,54 +120,54 @@ void PelicanPosCtrl::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStam
 
     p_pos.push_back(p);
 
-    Vector<4> att;
-    att[0] = msg->pose.pose.orientation.x;
-    att[1] = msg->pose.pose.orientation.y;
-    att[2] = msg->pose.pose.orientation.z;
-    att[3] = msg->pose.pose.orientation.w;
+//    Vector<4> att;
+//    att[0] = msg->pose.pose.orientation.x;
+//    att[1] = msg->pose.pose.orientation.y;
+//    att[2] = msg->pose.pose.orientation.z;
+//    att[3] = msg->pose.pose.orientation.w;
 
-    if(p_att.size() > 100)
-        p_att.erase(p_att.begin());
+//    if(p_att.size() > 100)
+//        p_att.erase(p_att.begin());
 
-    p_att.push_back(att);
+//    p_att.push_back(att);
 
-    double yaw = tf::getYaw(msg->pose.pose.orientation);
-
-
-    Vector<4> pos = makeVector(p[0], p[1], p[2], yaw);
+    //double yaw = tf::getYaw(msg->pose.pose.orientation);
 
     if(firstgpPose)
     {
-        orig = pos;
+        orig = p;
         firstgpPose = false;
     }
 
-    curPos = pos-orig;
-    curPos[3] += orig[3];
+    curPos = p-orig;
 
     geometry_msgs::PoseWithCovarianceStamped fixepose;
     fixepose.pose.pose.position.x = curPos[0];
     fixepose.pose.pose.position.y = curPos[1];
     fixepose.pose.pose.position.z = curPos[2];
 
+    tf::Quaternion q = tf::Quaternion(curYaw,0,0);
+
+    fixepose.pose.pose.orientation.x = q.x();
+    fixepose.pose.pose.orientation.y = q.y();
+    fixepose.pose.pose.orientation.z = q.z();
+    fixepose.pose.pose.orientation.w = q.w();
+
     fixedPosePub.publish(fixepose);
 
 
-    ROS_INFO_THROTTLE(4,"POSE: %f\t%f\t%f\t%f ", curPos[0], curPos[1], curPos[2], (curPos[3])*180/3.14);
-
-
+    ROS_INFO_THROTTLE(4,"POSE: %f\t%f\t%f\t%f ", curPos[0], curPos[1], curPos[2], (curYaw)*180/3.14);
 }
 
-void PelicanPosCtrl::gpsPositionCallback(const asctec_hl_comm::PositionWithCovarianceStamped::Ptr &msg)
+void PelicanPosCtrl::magCallback(const geometry_msgs::Vector3Stamped::Ptr &msg)
 {
-    Vector<3> p;
-    p[0] = msg->position.x;
-    p[1] = msg->position.y;
-    p[2] = msg->position.z;
+    curYaw = atan2(msg->vector.y, msg->vector.x) + ((45.0)*3.14/180.0);
+    if(curYaw > 3.14)
+        curYaw -= 2*3.14;
 
-    positions.push_back(p);
-
+    ROS_INFO("**************** YAW: %f %f %f", curYaw,  msg->vector.x,  msg->vector.y);
 }
+
 
 void PelicanPosCtrl::SetCurGoal(TooN::Vector<4> p)
 {
@@ -200,7 +201,15 @@ void PelicanPosCtrl::Update()
     Vector<4> err_4D;
     for(int i=0; i<YAW; i++)
     {
-        err_4D[i] = curPos[i]-curGoal[i];
+        if(i<YAW)
+        {
+            err_4D[i] = curPos[i]-curGoal[i];
+        }
+        else
+        {
+            err_4D[i] = curYaw-curGoal[i];
+        }
+
         err_4D[i] = DEADZONE(err_4D[i], goalThr[i]);
 
         zeroCtrl = zeroCtrl && (fabs(err_4D[i]) < 0.001);
@@ -235,7 +244,7 @@ void PelicanPosCtrl::Update()
         velmsg.z = curCtrl[2];
         velmsg.type = velmsg.velocity;
         velmsg.v_max_xy = -1;
-	velmsg.v_max_z   = -1;
+        velmsg.v_max_z   = -1;
         velPub.publish(velmsg);
     }
 
@@ -244,8 +253,8 @@ void PelicanPosCtrl::Update()
 void PelicanPosCtrl::TransformFromGlobal2Pelican(Vector<4> &ctrl_cur)
 {
     Vector<2> vxvy = makeVector(ctrl_cur[0], ctrl_cur[1]);
-    Matrix<2, 2, double> trans = Data(-cos(curPos[3]), -sin(curPos[3]),
-                                 -sin(curPos[3]), cos(curPos[3]));
+    Matrix<2, 2, double> trans = Data(-cos(curYaw), -sin(curYaw),
+                                 -sin(curYaw), cos(curYaw));
 
     vxvy = trans*vxvy;
 
