@@ -72,9 +72,13 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     pid[Z].initPid(pidz[0],pidz[2], pidz[1], 0, -0);
     pid[YAW].initPid(pid_yaw[0],pid_yaw[2], pid_yaw[1], 0, -0);
 
-    ctrlCutoff[X] = 0.5;
-    ctrlCutoff[Y] = 0.5;
-    ctrlCutoff[Z] = 0.05;
+    nh.param<double>("max_vx",ctrlCutoff[X],0.5);
+    nh.param<double>("max_vy",ctrlCutoff[Y],0.5);
+    nh.param<double>("max_vz",ctrlCutoff[Z],0.5);
+
+    //ctrlCutoff[X] = 0.5;
+    //ctrlCutoff[Y] = 0.5;
+    //ctrlCutoff[Z] = 0.05;
     ctrlCutoff[YAW] = 0.1;
 
     goalThr[X] = 1.5;
