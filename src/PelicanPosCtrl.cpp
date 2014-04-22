@@ -170,7 +170,21 @@ void PelicanPosCtrl::magCallback(const geometry_msgs::Vector3Stamped::Ptr &msg)
     if(curYaw > 3.14)
         curYaw -= 2*3.14;
 
-    ROS_INFO("**************** YAW: %f %f %f", curYaw,  msg->vector.x,  msg->vector.y);
+    yaws.push_back(curYaw);
+    if(yaws.size()>10)
+    {
+        yaws.erase(yaws.begin());
+    }
+
+    curYaw = 0;
+    for(int i=0; i<yaws.size(); i++)
+    {
+        curYaw += yaws[i];
+    }
+
+    curYaw /= yaws.size();
+
+    ROS_INFO("**************** YAW: %f", curYaw);
 }
 
 
