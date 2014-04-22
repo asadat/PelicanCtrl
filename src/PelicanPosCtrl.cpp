@@ -157,6 +157,7 @@ void PelicanPosCtrl::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStam
     fixepose.pose.pose.orientation.z = q.z();
     fixepose.pose.pose.orientation.w = q.w();
 
+    fixepose.header.stamp = msg->header.stamp;
     fixedPosePub.publish(fixepose);
 
 
