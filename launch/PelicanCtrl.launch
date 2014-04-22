@@ -1,7 +1,7 @@
 <launch>
     <node name="PelicanCtrl" pkg="PelicanCtrl" type="PelicanCtrl" clear_params="true" output="screen" >
-	      
-	      <param name="~px" value="0.17" />
+	      <rosparam file="$(find PelicanCtrl)/launch/PelicanCtrl_parameters.yaml" />
+	      <!--<param name="~px" value="0.17" />
 	      <param name="~dx" value="0" />
 	      <param name="~ix" value="0" />
 	      <param name="~max_vx" value="1.0" />
@@ -18,7 +18,7 @@
 	      
    	      <param name="~p_yaw" value="0.0" />
 	      <param name="~d_yaw" value="0" />
-	      <param name="~i_yaw" value="0" />
+	      <param name="~i_yaw" value="0" />-->
 
 
 <!--	        <remap to="vel_cmd" from="/fcu/control" />-->

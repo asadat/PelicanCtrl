@@ -1,0 +1,16 @@
+px: 0.17    
+dx: 0    
+ix: 0    
+max_vx: 1.0    
+py: 0.17    
+dy: 0    
+iy: 0    
+max_vy: 1.0    
+pz: 0.0    
+dz: 0    
+iz: 0    
+max_vz: 0.7    
+p_yaw: 0.0    
+d_yaw: 0    
+i_yaw: 0   
+
