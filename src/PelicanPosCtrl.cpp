@@ -46,7 +46,7 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
 
     double pidx[3];
     double pidy[3];
-    double pidz[3];
+
     double pid_yaw[3];
 
     nh.param<double>("px",pidx[0], 0.01);
@@ -57,9 +57,13 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     nh.param<double>("dy",pidy[1], 0.0);
     nh.param<double>("iy",pidy[2], 0.0);
 
-    nh.param<double>("pz",pidz[0], 0.01);
-    nh.param<double>("dz",pidz[1], 0.0);
-    nh.param<double>("iz",pidz[2], 0.0);
+    nh.param<double>("pz_a",pidz_a[0], 0.01);
+    nh.param<double>("dz_a",pidz_a[1], 0.0);
+    nh.param<double>("iz_a",pidz_a[2], 0.0);
+
+    nh.param<double>("pz_d",pidz_d[0], 0.01);
+    nh.param<double>("dz_d",pidz_d[1], 0.0);
+    nh.param<double>("iz_d",pidz_d[2], 0.0);
 
     nh.param<double>("p_yaw",pid_yaw[0], 0.01);
     nh.param<double>("d_yaw",pid_yaw[1], 0.0);
@@ -69,7 +73,7 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
 
     pid[X].initPid(pidx[0],pidx[2], pidx[1], 0, -0);
     pid[Y].initPid(pidy[0],pidy[2], pidy[1], 0, -0);
-    pid[Z].initPid(pidz[0],pidz[2], pidz[1], 0, -0);
+    pid[Z].initPid(pidz_d[0],pidz_d[2], pidz_d[1], 0, -0);
     pid[YAW].initPid(pid_yaw[0],pid_yaw[2], pid_yaw[1], 0, -0);
 
     nh.param<double>("max_vx",ctrlCutoff[X],0.5);
@@ -81,9 +85,12 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     //ctrlCutoff[Z] = 0.05;
     ctrlCutoff[YAW] = 0.1;
 
-    goalThr[X] = 1.5;
-    goalThr[Y] = 1.5;
-    goalThr[Z] = 0.0;
+    nh.param<double>("goal_thr_x",goalThr[X], 1.5);
+    nh.param<double>("goal_thr_y",goalThr[Y], 1.5);
+    nh.param<double>("goal_thr_z",goalThr[Z], 0);
+    //goalThr[X] = 1.5;
+    //goalThr[Y] = 1.5;
+    //goalThr[Z] = 0.0;
     goalThr[YAW] = 0.2;
 
     //SetCurGoal(orig);
@@ -219,6 +226,8 @@ void PelicanPosCtrl::OnReachedGoal()
 
 void PelicanPosCtrl::Update()
 {
+    static bool ascending = false;
+
     ROS_INFO_THROTTLE(5,"Hover:%d",hover);
     if(!hasHoverPos)
         return;
@@ -246,7 +255,24 @@ void PelicanPosCtrl::Update()
 
         err_4D[i] = DEADZONE(err_4D[i], goalThr[i]);
 
+
         zeroCtrl = zeroCtrl && (fabs(err_4D[i]) < 0.001);
+
+        if(i == Z) // set the correct PID gains for ascending/descending
+        {
+            if(ascending && err_4D[i] > 0)
+            {
+                ascending = false;
+                pid[i].setGains(pidz_d[0],pidz_d[2],pidz_d[1],0,-0);
+                ROS_INFO("Descending: %f %f %f",pidz_d[0],pidz_d[2],pidz_d[1]);
+            }
+            else if(!ascending && err_4D[i] < 0)
+            {
+                ascending = true;
+                pid[i].setGains(pidz_a[0],pidz_a[2],pidz_a[1],0,-0);
+                ROS_INFO("Ascending: %f %f %f",pidz_a[0],pidz_a[2],pidz_a[1]);
+            }
+        }
 
         curCtrl[i] = pid[i].updatePid(err_4D[i], dt);
         curCtrl[i] = CUTOFF(curCtrl[i], -ctrlCutoff[i], ctrlCutoff[i]);

@@ -61,6 +61,9 @@ private:
     double curYaw;
     TooN::Vector<4> curCtrl;
 
+    double pidz_a[3]; //PID gains used when ascending
+    double pidz_d[3]; //PID gains used when descending
+
     TooN::Vector<3> orig;
 
 
