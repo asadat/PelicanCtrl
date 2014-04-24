@@ -19,6 +19,9 @@
   <depend package="tf"/>
   <depend package="asctec_hl_comm"/>  
   <depend package="dynamic_reconfigure"/>
+ <export>
+     <cpp cflags=" -I${prefix}/srv_gen/cpp"/>
+  </export>
 </package>
 
 
