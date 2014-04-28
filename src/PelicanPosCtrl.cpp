@@ -85,14 +85,15 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     //ctrlCutoff[Z] = 0.05;
     ctrlCutoff[YAW] = 0.1;
 
-    nh.param<double>("goal_thr_x",goalThr[X], 1.5);
-    nh.param<double>("goal_thr_y",goalThr[Y], 1.5);
+    nh.param<double>("goal_thr_x",goalThr[X], 0);
+    nh.param<double>("goal_thr_y",goalThr[Y], 0);
     nh.param<double>("goal_thr_z",goalThr[Z], 0);
-    ROS_INFO("goal reached thresholds: %f %f %f", goalThr[X],goalThr[Y],goalThr[Z]);
+    nh.param<double>("goal_thr_yaw",goalThr[YAW], 0);
+    ROS_INFO("goal reached thresholds: %f %f %f %f", goalThr[X],goalThr[Y],goalThr[Z],goalThr[YAW]);
     //goalThr[X] = 1.5;
     //goalThr[Y] = 1.5;
     //goalThr[Z] = 0.0;
-    goalThr[YAW] = 0.2;
+    //goalThr[YAW] = 0.2;
 
     //SetCurGoal(orig);
 }
@@ -243,7 +244,7 @@ void PelicanPosCtrl::Update()
     bool zeroCtrl = true;
 
     Vector<4> err_4D;
-    for(int i=0; i<YAW; i++)
+    for(int i=0; i<=YAW; i++)
     {
         if(i<YAW)
         {
@@ -302,6 +303,12 @@ void PelicanPosCtrl::Update()
 
 
         asctec_hl_comm::mav_ctrl velmsg;
+
+        if(hover)
+        {
+            velmsg.yaw = curCtrl[3];
+        }
+
         velmsg.x = curCtrl[0];
         velmsg.y = curCtrl[1];
         velmsg.z = curCtrl[2];
