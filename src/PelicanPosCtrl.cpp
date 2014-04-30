@@ -23,7 +23,7 @@ PelicanPosCtrl* PelicanPosCtrl::instance = NULL;
 
 PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
 {
-
+    origIsSet = false;
     hasHoverPos = false;
     hover = false;
     orig = makeVector(0,0,0);
@@ -40,7 +40,7 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
 
     curCtrl = makeVector(0,0,0,0);
 
-    curPos = makeVector(0,0,1);
+    curPos = makeVector(0,0,0);
     curYaw = 0;
     curGoal = makeVector(curPos[0], curPos[1], curPos[2], curYaw);
 
@@ -79,11 +79,13 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     nh.param<double>("max_vx",ctrlCutoff[X],0.5);
     nh.param<double>("max_vy",ctrlCutoff[Y],0.5);
     nh.param<double>("max_vz",ctrlCutoff[Z],0.5);
+    nh.param<double>("max_vyaw",ctrlCutoff[YAW],0.5);
 
+    nh.param<double>("small_xyz_v",small_xyz_v,0.5);
     //ctrlCutoff[X] = 0.5;
     //ctrlCutoff[Y] = 0.5;
     //ctrlCutoff[Z] = 0.05;
-    ctrlCutoff[YAW] = 0.1;
+    //ctrlCutoff[YAW] = 0.1;
 
     nh.param<double>("goal_thr_x",goalThr[X], 0);
     nh.param<double>("goal_thr_y",goalThr[Y], 0);
@@ -106,6 +108,8 @@ bool PelicanPosCtrl::GoToPosServiceCall(PelicanCtrl::gotoPosRequest &req, Pelica
     p[2] = req.z;
     p[3] = req.yaw;
 
+    origIsSet = !req.set_orig;
+
     SetCurGoal(p);
     return true;
 }
@@ -121,8 +125,7 @@ bool PelicanPosCtrl::HoverServiceCall(PelicanCtrl::hoverRequest &req, PelicanCtr
 
 
 void PelicanPosCtrl::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg)
-{
-    static bool firstgpPose = true;
+{   
     Vector<3> p;
     p[0] = msg->pose.pose.position.x;
     p[1] = msg->pose.pose.position.y;
@@ -146,10 +149,10 @@ void PelicanPosCtrl::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStam
 
     //double yaw = tf::getYaw(msg->pose.pose.orientation);
 
-    if(firstgpPose)
+    if(!origIsSet)
     {
         orig = p;
-        firstgpPose = false;
+        origIsSet = true;
     }
 
     curPos = p-orig;
@@ -176,8 +179,10 @@ void PelicanPosCtrl::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStam
 void PelicanPosCtrl::magCallback(const geometry_msgs::Vector3Stamped::Ptr &msg)
 {
     curYaw = atan2(msg->vector.y, msg->vector.x) + ((45.0)*3.14/180.0);
-    if(curYaw > 3.14)
-        curYaw -= 2*3.14;
+    if(curYaw > 3.1415)
+        curYaw -= 2*3.1415;
+    else if(curYaw < -3.1415)
+        curYaw += 2*3.1415;
 
     yaws.push_back(curYaw);
     if(yaws.size()>50)
@@ -208,7 +213,7 @@ void PelicanPosCtrl::magCallback(const geometry_msgs::Vector3Stamped::Ptr &msg)
     fixepose.header.stamp = msg->header.stamp;
     fixedPosePub.publish(fixepose);
 */
-  //  ROS_INFO("**************** YAW: %f", curYaw);
+  //ROS_INFO("**************** YAW: %f", curYaw);
 }
 
 
@@ -241,7 +246,8 @@ void PelicanPosCtrl::Update()
     ros::Duration dt = lastTime-curTime;
     lastTime = curTime;
 
-    bool zeroCtrl = true;
+    bool smallXYZCtrl = true;
+    bool atgoal = true;
 
     Vector<4> err_4D;
     for(int i=0; i<=YAW; i++)
@@ -253,16 +259,28 @@ void PelicanPosCtrl::Update()
         else
         {
             err_4D[i] = curYaw-curGoal[i];
+            if(err_4D[i] > 3.14)
+            {
+                err_4D[i] -= 2*3.14;
+            }
+            else if(err_4D[i] < -3.14)
+            {
+                err_4D[i] += 2*3.14;
+            }
+
+            //ROS_INFO("DYAW: %f", err_4D[i]);
         }
 
         err_4D[i] = DEADZONE(err_4D[i], goalThr[i]);
 
 
-        zeroCtrl = zeroCtrl && (fabs(err_4D[i]) < 0.001);
+
+        atgoal = atgoal && (fabs(err_4D[i]) < 0.001);
+
 
         if(i == Z) // set the correct PID gains for ascending/descending
         {
-            ROS_INFO("Asc:%d ERR:%f",ascending,err_4D[i] );
+            //ROS_INFO("Asc:%d ERR:%f",ascending,err_4D[i] );
 
             if(ascending && err_4D[i] > 0)
             {
@@ -280,9 +298,14 @@ void PelicanPosCtrl::Update()
 
         curCtrl[i] = pid[i].updatePid(err_4D[i], dt);
         curCtrl[i] = CUTOFF(curCtrl[i], -ctrlCutoff[i], ctrlCutoff[i]);
+
+        if(i != YAW)
+        {
+            smallXYZCtrl = smallXYZCtrl && (fabs(curCtrl[i]) < small_xyz_v);
+        }
     }
 
-    if(zeroCtrl && !hover)
+    if(atgoal && !hover)
     {
         OnReachedGoal();
     }
@@ -304,9 +327,13 @@ void PelicanPosCtrl::Update()
 
         asctec_hl_comm::mav_ctrl velmsg;
 
-        if(hover)
+        if(smallXYZCtrl)
         {
             velmsg.yaw = curCtrl[3];
+        }
+        else
+        {
+            velmsg.yaw = 0;
         }
 
         velmsg.x = curCtrl[0];

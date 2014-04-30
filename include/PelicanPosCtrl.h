@@ -67,10 +67,12 @@ private:
     TooN::Vector<3> orig;
 
 
+    double small_xyz_v;
     double ctrlCutoff[NUM];
     double goalThr[NUM];
     bool hover;
     bool hasHoverPos;
+    bool origIsSet;
 
     control_toolbox::Pid pid[NUM];
 };
