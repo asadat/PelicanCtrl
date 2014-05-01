@@ -76,10 +76,12 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     pid[Z].initPid(pidz_d[0],pidz_d[2], pidz_d[1], 0, -0);
     pid[YAW].initPid(pid_yaw[0],pid_yaw[2], pid_yaw[1], 0, -0);
 
-    nh.param<double>("max_vx",ctrlCutoff[X],0.5);
-    nh.param<double>("max_vy",ctrlCutoff[Y],0.5);
+    nh.param<double>("max_xy_v",ctrlCutoff[X],0.5);
+    nh.param<double>("max_xy_v",ctrlCutoff[Y],0.5);
     nh.param<double>("max_vz",ctrlCutoff[Z],0.5);
     nh.param<double>("max_vyaw",ctrlCutoff[YAW],0.5);
+
+    max_xy_v = ctrlCutoff[X];
 
     nh.param<double>("small_xyz_v",small_xyz_v,0.5);
     //ctrlCutoff[X] = 0.5;
@@ -315,10 +317,21 @@ void PelicanPosCtrl::Update()
     {
 
         ROS_INFO_THROTTLE(5, "CTRL-W: %f\t%f\t%f\t%f dt: %f", curCtrl[0], curCtrl[1], curCtrl[2], curCtrl[3], dt.toSec());
+
+        Vector<2> xyV = makeVector(curCtrl[X],curCtrl[Y]);
+        if(xyV*xyV > max_xy_v)
+        {
+            normalize(xyV);
+            xyV =  max_xy_v*xyV;
+        }
+
+        curCtrl[X] = xyV[X];
+        curCtrl[Y] = xyV[Y];
+
         TransformFromGlobal2Pelican(curCtrl);
 
-        for(int i=0; i<=YAW; i++)
-            curCtrl[i] = CUTOFF(curCtrl[i], -ctrlCutoff[i], ctrlCutoff[i]);
+        curCtrl[Z] = CUTOFF(curCtrl[Z], -ctrlCutoff[Z], ctrlCutoff[Z]);
+        curCtrl[YAW] = CUTOFF(curCtrl[YAW], -ctrlCutoff[YAW], ctrlCutoff[YAW]);
 
         ROS_INFO_THROTTLE(5, "ERR: %f\t%f\t%f dt: %f", err_4D[0], err_4D[1], err_4D[2], dt.toSec());
         ROS_INFO_THROTTLE(5, "CTRL-P: %f\t%f\t%f\t%f dt: %f", curCtrl[0], curCtrl[1], curCtrl[2], curCtrl[3], dt.toSec());

@@ -66,7 +66,7 @@ private:
 
     TooN::Vector<3> orig;
 
-
+    double max_xy_v;
     double small_xyz_v;
     double ctrlCutoff[NUM];
     double goalThr[NUM];
