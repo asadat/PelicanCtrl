@@ -14,7 +14,7 @@
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 
 
-#define CUTOFF(a,b,c) (a<b)?b:(a>c?c:a)
+#define CUTOFF(a,b,c) ((a<b)?(b):(a>c?c:a))
 #define DEADZONE(a,b) ((fabs(a)<b)?0:a)
 
 using namespace TooN;
@@ -271,11 +271,13 @@ void PelicanPosCtrl::Update()
             //ROS_INFO("DYAW: %f", err_4D[i]);
         }
 
-        err_4D[i] = DEADZONE(err_4D[i], goalThr[i]);
+       // err_4D[i] = DEADZONE(err_4D[i], goalThr[i]);
+        bool withinGoalThr = (fabs(DEADZONE(err_4D[i], goalThr[i])) < 0.001);
 
 
 
-        atgoal = atgoal && (fabs(err_4D[i]) < 0.001);
+        //atgoal = atgoal && (fabs(err_4D[i]) < 0.001);
+        atgoal = atgoal && withinGoalThr;
 
 
         if(i == Z) // set the correct PID gains for ascending/descending
@@ -297,7 +299,7 @@ void PelicanPosCtrl::Update()
         }
 
         curCtrl[i] = pid[i].updatePid(err_4D[i], dt);
-        curCtrl[i] = CUTOFF(curCtrl[i], -ctrlCutoff[i], ctrlCutoff[i]);
+        //curCtrl[i] = CUTOFF(curCtrl[i], -ctrlCutoff[i], ctrlCutoff[i]);
 
         if(i != YAW)
         {
@@ -314,6 +316,10 @@ void PelicanPosCtrl::Update()
 
         ROS_INFO_THROTTLE(5, "CTRL-W: %f\t%f\t%f\t%f dt: %f", curCtrl[0], curCtrl[1], curCtrl[2], curCtrl[3], dt.toSec());
         TransformFromGlobal2Pelican(curCtrl);
+
+        for(int i=0; i<=YAW; i++)
+            curCtrl[i] = CUTOFF(curCtrl[i], -ctrlCutoff[i], ctrlCutoff[i]);
+
         ROS_INFO_THROTTLE(5, "ERR: %f\t%f\t%f dt: %f", err_4D[0], err_4D[1], err_4D[2], dt.toSec());
         ROS_INFO_THROTTLE(5, "CTRL-P: %f\t%f\t%f\t%f dt: %f", curCtrl[0], curCtrl[1], curCtrl[2], curCtrl[3], dt.toSec());
 
