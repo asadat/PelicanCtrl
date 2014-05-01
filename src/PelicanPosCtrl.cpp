@@ -175,7 +175,7 @@ void PelicanPosCtrl::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStam
     fixedPosePub.publish(fixepose);
 
 
-    ROS_INFO_THROTTLE(4,"POSE: %f\t%f\t%f\t%f ", curPos[0], curPos[1], curPos[2], (curYaw)*180/3.14);
+    //ROS_INFO_THROTTLE(4,"POSE: %f\t%f\t%f\t%f ", curPos[0], curPos[1], curPos[2], (curYaw)*180/3.14);
 }
 
 void PelicanPosCtrl::magCallback(const geometry_msgs::Vector3Stamped::Ptr &msg)
@@ -270,6 +270,7 @@ void PelicanPosCtrl::Update()
                 err_4D[i] += 2*3.14;
             }
 
+            err_4D[i] = DEADZONE(err_4D[i], goalThr[i]);
             //ROS_INFO("DYAW: %f", err_4D[i]);
         }
 
@@ -335,6 +336,8 @@ void PelicanPosCtrl::Update()
 
         ROS_INFO_THROTTLE(5, "ERR: %f\t%f\t%f dt: %f", err_4D[0], err_4D[1], err_4D[2], dt.toSec());
         ROS_INFO_THROTTLE(5, "CTRL-P: %f\t%f\t%f\t%f dt: %f", curCtrl[0], curCtrl[1], curCtrl[2], curCtrl[3], dt.toSec());
+        ROS_INFO_THROTTLE(4,"POSE: %f\t%f\t%f\t%f ", curPos[0], curPos[1], curPos[2], (curYaw)*180/3.14);
+
 
 //        geometry_msgs::Twist velmsg;
 //        velmsg.linear.x = curCtrl[0];

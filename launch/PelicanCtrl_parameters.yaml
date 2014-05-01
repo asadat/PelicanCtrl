@@ -20,4 +20,4 @@ p_yaw: 0.02
 d_yaw: 0.01    
 i_yaw: 0
 max_vyaw: 0.5   
-small_xyz_v: 1
+small_xyz_v: 1.5
