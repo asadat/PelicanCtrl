@@ -181,10 +181,6 @@ void PelicanPosCtrl::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStam
 void PelicanPosCtrl::magCallback(const geometry_msgs::Vector3Stamped::Ptr &msg)
 {
     curYaw = atan2(msg->vector.y, msg->vector.x) + ((45.0)*3.14/180.0);
-    if(curYaw > 3.1415)
-        curYaw -= 2*3.1415;
-    else if(curYaw < -3.1415)
-        curYaw += 2*3.1415;
 
     yaws.push_back(curYaw);
     if(yaws.size()>50)
@@ -199,7 +195,12 @@ void PelicanPosCtrl::magCallback(const geometry_msgs::Vector3Stamped::Ptr &msg)
     }
 
     curYaw /= yaws.size();
-   
+    ROS_INFO("MAG: %f", curYaw);
+    if(curYaw > 3.1415)
+        curYaw -= 2*3.1415;
+    else if(curYaw < -3.1415)
+        curYaw += 2*3.1415;
+   ROS_INFO("FIX: %f", curYaw);
     /* geometry_msgs::PoseWithCovarianceStamped fixepose;
     fixepose.pose.pose.position.x = curPos[0];
     fixepose.pose.pose.position.y = curPos[1];
