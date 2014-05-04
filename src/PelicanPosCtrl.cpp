@@ -195,12 +195,12 @@ void PelicanPosCtrl::magCallback(const geometry_msgs::Vector3Stamped::Ptr &msg)
     }
 
     curYaw /= yaws.size();
-    ROS_INFO("MAG: %f", curYaw);
+    //ROS_INFO("MAG: %f", curYaw);
     if(curYaw > 3.1415)
         curYaw -= 2*3.1415;
     else if(curYaw < -3.1415)
         curYaw += 2*3.1415;
-   ROS_INFO("FIX: %f", curYaw);
+   //ROS_INFO("FIX: %f", curYaw);
     /* geometry_msgs::PoseWithCovarianceStamped fixepose;
     fixepose.pose.pose.position.x = curPos[0];
     fixepose.pose.pose.position.y = curPos[1];
@@ -224,6 +224,7 @@ void PelicanPosCtrl::SetCurGoal(TooN::Vector<4> p)
 {
     hasHoverPos = true;
     hover = false;
+    angularVelDir = 0;
     curGoal = p;
 }
 void PelicanPosCtrl::OnReachedGoal()
@@ -352,6 +353,17 @@ void PelicanPosCtrl::Update()
 
         if(smallXYZCtrl)
         {
+            if(fabs(angularVelDir) <0.001)
+            {
+                angularVelDir = (curCtrl[3]>0)?1:-1;
+            }
+            else
+            {
+                if(fabs(err_4D[YAW])> 2.0)
+                {
+                    curCtrl[3] = fabs(curCtrl[3])*angularVelDir;
+                }
+            }
             velmsg.yaw = curCtrl[3];
         }
         else

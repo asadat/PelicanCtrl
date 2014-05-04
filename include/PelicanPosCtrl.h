@@ -60,6 +60,7 @@ private:
     TooN::Vector<3> curPos;
     double curYaw;
     TooN::Vector<4> curCtrl;
+    double angularVelDir;
 
     double pidz_a[3]; //PID gains used when ascending
     double pidz_d[3]; //PID gains used when descending
