@@ -350,6 +350,7 @@ void PelicanPosCtrl::Update()
 
 
         asctec_hl_comm::mav_ctrl velmsg;
+        velmsg.header.stamp = ros::Time::now();
 
         if(smallXYZCtrl)
         {
