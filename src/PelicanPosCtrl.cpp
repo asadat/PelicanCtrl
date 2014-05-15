@@ -316,13 +316,14 @@ void PelicanPosCtrl::Update()
     {
         OnReachedGoal();
     }
-    else
+
+    //else
     {
 
         ROS_INFO_THROTTLE(5, "CTRL-W: %f\t%f\t%f\t%f dt: %f", curCtrl[0], curCtrl[1], curCtrl[2], curCtrl[3], dt.toSec());
 
         Vector<2> xyV = makeVector(curCtrl[X],curCtrl[Y]);
-        if(xyV*xyV > max_xy_v)
+        if(xyV*xyV > max_xy_v*max_xy_v)
         {
             normalize(xyV);
             xyV =  max_xy_v*xyV;
