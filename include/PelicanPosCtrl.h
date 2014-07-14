@@ -3,9 +3,9 @@
 #include "TooN/TooN.h"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "geometry_msgs/Vector3Stamped.h"
-#include "PelicanCtrl/gotoPos.h"
+#include "pelican_ctrl/gotoPos.h"
 #include "control_toolbox/pid.h"
-#include "PelicanCtrl/hover.h"
+#include "pelican_ctrl/hover.h"
 
 class PelicanPosCtrl
 {
@@ -28,8 +28,8 @@ public:
     void magCallback(const geometry_msgs::Vector3Stamped::Ptr &msg);
     void gpsPositionCallback(const asctec_hl_comm::PositionWithCovarianceStamped::Ptr &msg);
     void gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg);
-    bool GoToPosServiceCall(PelicanCtrl::gotoPosRequest &req, PelicanCtrl::gotoPosResponse &res);
-    bool HoverServiceCall(PelicanCtrl::hoverRequest &req, PelicanCtrl::hoverResponse &res);
+    bool GoToPosServiceCall(pelican_ctrl::gotoPosRequest &req, pelican_ctrl::gotoPosResponse &res);
+    bool HoverServiceCall(pelican_ctrl::hoverRequest &req, pelican_ctrl::hoverResponse &res);
 
 private:
 

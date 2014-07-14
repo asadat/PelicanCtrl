@@ -1,44 +1,82 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+cmake_minimum_required(VERSION 2.8.3)
 
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
+project(pelican_ctrl)
 
-rosbuild_init()
+set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS} -g -Wall") # For G++ <4.7; also appears to be supported in G++ 4.7+ as alias to c++11
 
-#set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
-set(PositionVis_LIBRARIES GL GLU glut)
+#set(UEYE_INCLUDE_PATH /usr/include)
+#set(UEYE_LIBRARY_PATH /usr/lib)
+#set(UEYE_LIBRARY ueye_api)
+#set(UEYECAM_NODELET_NAME ueye_cam_nodelet)
 
-#uncomment if you have defined messages
-#rosbuild_genmsg()
-#uncomment if you have defined services
-rosbuild_gensrv()
-include_directories("./inlcude")
-#include_directories("~/tag")
-#link_directories("~/tag")
-include_directories("~")
-#common commands for building c++ executables and libraries
-#rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
-#target_link_libraries(${PROJECT_NAME} another_library)
-#rosbuild_add_boost_directories()
-#rosbuild_link_boost(${PROJECT_NAME} thread)
-rosbuild_add_executable(PelicanCtrl 
-src/PelicanPosCtrl.cpp
-src/LoggingService.cpp
-include/PelicanPosCtrl.h
+set(POSITIONVIS_LIBRARIES GL GLU glut)
+
+set(PELICANCTRL_SOURCES
+  src/PelicanPosCtrl.cpp
+  src/LoggingService.cpp
+  include/PelicanPosCtrl.h
 )
 
-rosbuild_add_executable(PositionVis
-include/PositionVis.h
-src/PositionVis.cpp
+set(POSITIONVIS_SOURCES
+  include/PositionVis.h
+  src/PositionVis.cpp
 )
-target_link_libraries(PositionVis  ${PositionVis_LIBRARIES})
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  rospy
+  geometry_msgs
+  std_msgs
+  nav_msgs
+  dynamic_reconfigure
+  tf
+  asctec_hl_comm
+  control_toolbox
+  message_generation
+  rosconsole
+  )
+
+#generate_dynamic_reconfigure_options(
+#  cfg/UEyeCam.cfg
+#  )
+
+add_service_files(FILES
+   gotoPos.srv  
+   hover.srv
+)
+
+generate_messages()
+
+
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES 
+  CATKIN_DEPENDS roscpp  rospy  geometry_msgs  std_msgs  nav_msgs  dynamic_reconfigure  tf  asctec_hl_comm  control_toolbox rosconsole  )
+
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  )
+
+  
+add_executable(PositionViz ${POSITIONVIS_SOURCES})
+target_link_libraries(PositionViz  ${POSITIONVIS_LIBRARIES} ${catkin_LIBRARIES})
+
+add_executable(PelicanCtrl ${PELICANCTRL_SOURCES})
+target_link_libraries(PelicanCtrl ${catkin_LIBRARIES})
+
+
+#install(TARGETS ${UEYECAM_LIB_NAME} ${UEYECAM_NODELET_NAME}
+#  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#  )
+
+#install(FILES nodelet_plugins.xml
+#  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+#  )
+
+#install(DIRECTORY launch/
+#  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+#  )
 

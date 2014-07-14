@@ -6,7 +6,7 @@
 #include <ros/ros.h>
 #include <asctec_hl_comm/mav_ctrl.h>
 #include <asctec_hl_comm/mav_ctrl_motors.h>
-#include "PelicanCtrl/start_log.h"
+//#include "PelicanCtrl/start_log.h"
 #include "PelicanPosCtrl.h"
 //#include "TooN/TooN.h"
 #include "tf/tf.h"
@@ -102,7 +102,7 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     //SetCurGoal(orig);
 }
 
-bool PelicanPosCtrl::GoToPosServiceCall(PelicanCtrl::gotoPosRequest &req, PelicanCtrl::gotoPosResponse &res)
+bool PelicanPosCtrl::GoToPosServiceCall(pelican_ctrl::gotoPosRequest &req, pelican_ctrl::gotoPosResponse &res)
 {
     Vector<4> p;
     p[0] = req.x;
@@ -116,7 +116,7 @@ bool PelicanPosCtrl::GoToPosServiceCall(PelicanCtrl::gotoPosRequest &req, Pelica
     return true;
 }
 
-bool PelicanPosCtrl::HoverServiceCall(PelicanCtrl::hoverRequest &req, PelicanCtrl::hoverResponse &res)
+bool PelicanPosCtrl::HoverServiceCall(pelican_ctrl::hoverRequest &req, pelican_ctrl::hoverResponse &res)
 {
     if(!hasHoverPos)
         return false;
@@ -396,13 +396,13 @@ void PelicanPosCtrl::TransformFromGlobal2Pelican(Vector<4> &ctrl_cur)
     ctrl_cur[1] = vxvy[1];
 }
 
-bool start_log(PelicanCtrl::start_logRequest &req, PelicanCtrl::start_logResponse &res)
+/*bool start_log(PelicanCtrl::start_logRequest &req, PelicanCtrl::start_logResponse &res)
 {
     ROS_INFO("Service Called ................");
     //system("~/log.sh");
    // system("source /media/startlog.sh");
     return true;
-}
+}*/
 
 int main(int argc, char ** argv)
 {
