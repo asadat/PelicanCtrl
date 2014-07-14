@@ -262,14 +262,24 @@ PositionVis::PositionVis(int argc, char **argv)
 
     fixedYaw = 0;
     orig = makeVector(0,0,0,0);
-    gpsPos_sub = nh.subscribe("/fcu/gps_position", 100, &PositionVis::gpsPositionCallback, this);
-    gpsPose_sub = nh.subscribe("/fcu/gps_pose", 100, &PositionVis::gpsPoseCallback, this);
+    p_orig = makeVector(0,0,0);
+
+//    gpsPos_sub = nh.subscribe("/fcu/gps_position", 100, &PositionVis::gpsPositionCallback, this);
+   // gpsPos_sub = nh.subscribe("/msf_core/pose", 100, &PositionVis::gpsPositionCallback, this);
+//    gpsPose_sub = nh.subscribe("/fcu/gps_pose", 100, &PositionVis::gpsPoseCallback, this);
+    gpsPose_sub = nh.subscribe("/msf_core/pose", 1, &PositionVis::gpsPoseCallback, this);
 
     velcmd_sub = nh.subscribe("/fcu/control", 100, &PositionVis::velCallback, this);
     velcmd_pub = nh.advertise<asctec_hl_comm::mav_ctrl>("controlTimed", 1);
 
-    fixedPose_sub = nh.subscribe("/PelicanCtrl/fixedPose", 1, &PositionVis::fixedPoseCallback, this);
+    //fixedPose_sub = nh.subscribe("/PelicanCtrl/fixedPose", 1, &PositionVis::fixedPoseCallback, this);
+    fixedPose_sub = nh.subscribe("/fcu/gps_pose", 1, &PositionVis::fixedPoseCallback, this);
+
     fixedPose_pub = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("fixedPoseTimed", 10);
+
+    position_pub = nh.advertise<geometry_msgs::PointStamped>("/msf_updates/position_input", 10);
+
+    imu_sub = nh.subscribe("/fcu/imu", 100, &PositionVis::imuCallback, this);
 
     glutInit(&argc, argv);
 }
@@ -292,13 +302,37 @@ double n=0;
 double fy =0;
 void PositionVis::fixedPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg)
 {
+    static bool firstTime = true;
     geometry_msgs::PoseWithCovarianceStamped m;
     m.header.stamp = ros::Time::now();
     m.pose.pose.position = msg->pose.pose.position;
     m.pose.pose.orientation = msg->pose.pose.orientation;
 
+
     fixedYaw = tf::getYaw(m.pose.pose.orientation);
     m.pose.pose.orientation.y = fixedYaw;
+
+    TooN::Vector<3> pos;
+    pos[0] = m.pose.pose.position.x;
+    pos[1] = m.pose.pose.position.y;
+    pos[2] = m.pose.pose.position.z;
+
+    geometry_msgs::PointStamped pointStamped;
+    pointStamped.header = msg->header;
+    pointStamped.header.frame_id = "/world";
+    pointStamped.point.x = pos[0];
+    pointStamped.point.y = pos[1];
+    pointStamped.point.z = pos[2];
+
+    position_pub.publish(pointStamped);
+
+    if(firstTime)
+    {
+       p_orig = pos;
+       firstTime = false;
+    }
+
+    positions.push_back(pos);
 
     if(n<2)
     {
@@ -310,13 +344,72 @@ void PositionVis::fixedPoseCallback(const geometry_msgs::PoseWithCovarianceStamp
         fy = (((n-1))*fy+fixedYaw)/(n+0.01);
     }
 
-    ROS_INFO("%f", fy);
+    //ROS_INFO("%f", fy);
     m.pose.pose.position.z = 1+fy;
 
     fixedPose_pub.publish(m);
 
 
 
+}
+
+double mean(std::vector<double> &v)
+{
+    if(v.empty())
+        return 0;
+
+    double sum=0;
+    for(int i=0; i<v.size(); i++)
+    {
+        sum += v[i];
+    }
+
+    return sum/v.size();
+}
+
+double var(std::vector<double> &v)
+{
+    if(v.size() <= 1)
+        return 0;
+
+    double m=mean(v);
+    double difsum;
+    for(int i=0; i<v.size(); i++)
+    {
+        difsum = (m-v[i])*(m-v[i]);
+    }
+
+    return sqrt(difsum/(v.size()-1));
+}
+
+void PositionVis::imuCallback(const sensor_msgs::Imu::Ptr &msg)
+{/*
+    geometry_msgs::Quaternion q = msg->orientation;
+    tf::Quaternion tq(q.x,q.y,q.z,q.w);
+    tf::Matrix3x3 rot(tq);
+
+    double r[3];
+    rot.getRPY(r[0],r[1],r[2]);
+
+    rpy[0].push_back(r[0]);
+    rpy[1].push_back(r[1]);
+    rpy[2].push_back(r[2]);
+
+    if(rpy[0].size() > 10000)
+    {
+        double varn[3];
+        varn[0] = var(rpy[0]);
+        varn[1] = var(rpy[1]);
+        varn[2] = var(rpy[2]);
+
+        printf("%f %f %f\n", varn[0], varn[1], varn[2]);
+	exit(0);
+    }
+
+   if(rpy[0].size()%100==0)
+   {
+	printf("%d\n",rpy[0].size());
+   }*/
 }
 
 void PositionVis::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg)
@@ -350,7 +443,7 @@ void PositionVis::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped
         firstgpPose = false;
     }
 
-    ROS_INFO("X: %f\t Y: %f\t Z: %f\t YAW: %f", pos[0], pos[1], pos[2], pos[3]*180/3.14);
+   // ROS_INFO("X: %f\t Y: %f\t Z: %f\t YAW: %f", pos[0], pos[1], pos[2], pos[3]*180/3.14);
 
 }
 
@@ -386,15 +479,16 @@ void PositionVis::glDraw()
      glEnd();
 
 
-//    glPointSize(5);
-//    glBegin(GL_POINTS);
-//    for(int i=0; i<positions.size(); i++)
-//    {
-//        float c = ((float)(i))/positions.size();
-//        glColor3f(1-c, 1-c, 1-c);
-//        glVertex3f(positions[i][0], positions[i][1], 10+positions[i][2]);
-//    }
-//    glEnd();
+    //glPointSize(5);
+    //glColor3f(0,0,1);
+    //glBegin(GL_POINTS);
+    //for(int i=0; i<positions.size(); i++)
+    //{
+    //    float c = ((float)(i))/positions.size();
+    //    glColor3f(1-c, 1-c, 1-c);
+    //    glVertex3f(positions[i][0], positions[i][1], 10+positions[i][2]);
+    //}
+    //glEnd();
 
      glPointSize(5);
      glColor3f(1,0,0);
@@ -406,9 +500,18 @@ void PositionVis::glDraw()
      glBegin(GL_POINTS);
      for(unsigned int i=0; i<p_pos.size(); i++)
      {
-         float c = ((float)(i))/positions.size();
-         glColor3f(1-c, 1-c, 1-c);
+         //float c = ((float)(i))/p_pos.size();
+         glColor3f(0, 0, 0);
          glVertex3f(p_pos[i][0]-orig[0], p_pos[i][1]-orig[1], p_pos[i][2]-orig[2]);
+     }
+     glEnd();
+
+     glPointSize(2);
+     glBegin(GL_POINTS);
+     for(unsigned int i=0; i<positions.size(); i++)
+     {
+         glColor3f(1, 0, 0);
+         glVertex3f(positions[i][0]-p_orig[0], positions[i][1]-p_orig[1], positions[i][2]-p_orig[2]);
      }
      glEnd();
 
@@ -433,14 +536,17 @@ void PositionVis::glDraw()
          rot[0][1] = m[0][1]; rot[1][1] = m[1][1]; rot[2][1] = m[2][1];
          rot[0][2] = m[0][2]; rot[1][2] = m[1][2]; rot[2][2] = m[2][2];
 
+         glColor3f(1,0,0);
          ep = rot*ep+p;
          glVertex3f(p[0], p[1], p[2]);
          glVertex3f(ep[0], ep[1], ep[2]);
 
+	 glColor3f(0,1,0);
          ep = rot*makeVector(0,1,0)+p;
          glVertex3f(p[0], p[1], p[2]);
          glVertex3f(ep[0], ep[1], ep[2]);
 
+	 glColor3f(0,0,1);
          ep = rot*makeVector(0,0,1)+p;
          glVertex3f(p[0], p[1], p[2]);
          glVertex3f(ep[0], ep[1], ep[2]);

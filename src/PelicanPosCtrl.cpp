@@ -195,7 +195,7 @@ void PelicanPosCtrl::magCallback(const geometry_msgs::Vector3Stamped::Ptr &msg)
     }
 
     curYaw /= yaws.size();
-    //ROS_INFO("MAG: %f", curYaw);
+    ROS_INFO("MAG: %f", curYaw);
     if(curYaw > 3.1415)
         curYaw -= 2*3.1415;
     else if(curYaw < -3.1415)
