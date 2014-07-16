@@ -33,7 +33,7 @@ find_package(catkin REQUIRED COMPONENTS
   asctec_hl_comm
   control_toolbox
   message_generation
-  rosconsole
+#  rosconsole
   )
 
 #generate_dynamic_reconfigure_options(
@@ -51,7 +51,7 @@ generate_messages()
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES 
-  CATKIN_DEPENDS roscpp  rospy  geometry_msgs  std_msgs  nav_msgs  dynamic_reconfigure  tf  asctec_hl_comm  control_toolbox rosconsole  )
+  CATKIN_DEPENDS roscpp  rospy  geometry_msgs  std_msgs  nav_msgs  dynamic_reconfigure  tf  asctec_hl_comm  control_toolbox message_runtime)
 
 include_directories(
   include
@@ -65,6 +65,7 @@ target_link_libraries(PositionViz  ${POSITIONVIS_LIBRARIES} ${catkin_LIBRARIES})
 add_executable(PelicanCtrl ${PELICANCTRL_SOURCES})
 target_link_libraries(PelicanCtrl ${catkin_LIBRARIES})
 
+add_dependencies(PelicanCtrl  ${PROJECT_NAME}_gencpp)
 
 #install(TARGETS ${UEYECAM_LIB_NAME} ${UEYECAM_NODELET_NAME}
 #  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
