@@ -26,10 +26,10 @@ public:
     void mainLoop();
     void hanldeKeyPressed(std::map<unsigned char, bool> &key, bool &updateKey);
     void glDraw();
-    void gpsPositionCallback(const asctec_hl_comm::PositionWithCovarianceStamped::Ptr &msg);
+    //void gpsPositionCallback(const asctec_hl_comm::PositionWithCovarianceStamped::Ptr &msg);
     void gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg);
     void fixedPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg);
-    void imuCallback(const sensor_msgs::Imu::Ptr &msg);
+    //void imuCallback(const sensor_msgs::Imu::Ptr &msg);
 
     void velCallback(const asctec_hl_comm::mav_ctrl::Ptr &msg);
 
@@ -39,17 +39,11 @@ private:
     static PositionVis* instance;
 
     ros::NodeHandle nh;
-    ros::Subscriber gpsPos_sub;
-    ros::Subscriber gpsPose_sub;
-
-    ros::Subscriber velcmd_sub;
-    ros::Publisher velcmd_pub;
 
     ros::Subscriber fixedPose_sub;
-    ros::Publisher  fixedPose_pub;
+    ros::Subscriber gpsPose_sub;
     ros::Publisher  position_pub;
 
-    ros::Subscriber imu_sub;
 
     std::vector<TooN::Vector<3> > positions;
     std::vector<TooN::Vector<3> > p_pos;
@@ -57,7 +51,8 @@ private:
     TooN::Vector<4> orig;
     TooN::Vector<3> p_orig;
     std::vector<double> rpy[3];
-
+    TooN::Vector<4> curAtt;
+    
     double fixedYaw;
     TooN::Vector<3> vel;
 
