@@ -264,22 +264,16 @@ PositionVis::PositionVis(int argc, char **argv)
     orig = makeVector(0,0,0,0);
     p_orig = makeVector(0,0,0);
 
-//    gpsPos_sub = nh.subscribe("/fcu/gps_position", 100, &PositionVis::gpsPositionCallback, this);
-   // gpsPos_sub = nh.subscribe("/msf_core/pose", 100, &PositionVis::gpsPositionCallback, this);
-//    gpsPose_sub = nh.subscribe("/fcu/gps_pose", 100, &PositionVis::gpsPoseCallback, this);
-    gpsPose_sub = nh.subscribe("/msf_core/pose", 1, &PositionVis::gpsPoseCallback, this);
 
-    velcmd_sub = nh.subscribe("/fcu/control", 100, &PositionVis::velCallback, this);
-    velcmd_pub = nh.advertise<asctec_hl_comm::mav_ctrl>("controlTimed", 1);
+    gpsPose_sub = nh.subscribe("/fcu/gps_pose", 100, &PositionVis::gpsPoseCallback, this);
 
-    //fixedPose_sub = nh.subscribe("/PelicanCtrl/fixedPose", 1, &PositionVis::fixedPoseCallback, this);
-    fixedPose_sub = nh.subscribe("/fcu/gps_pose", 1, &PositionVis::fixedPoseCallback, this);
 
-    fixedPose_pub = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("fixedPoseTimed", 10);
+    fixedPose_sub = nh.subscribe("/msf_core/pose_after_update", 100, &PositionVis::fixedPoseCallback, this);
 
-    position_pub = nh.advertise<geometry_msgs::PointStamped>("/msf_updates/position_input", 10);
 
-    imu_sub = nh.subscribe("/fcu/imu", 100, &PositionVis::imuCallback, this);
+    position_pub = nh.advertise<geometry_msgs::PointStamped>("/msf_updates/position_input1", 10);
+
+
 
     glutInit(&argc, argv);
 }
@@ -289,17 +283,7 @@ PositionVis::~PositionVis()
 
 }
 
-void PositionVis::velCallback(const asctec_hl_comm::mav_ctrl::Ptr &msg)
-{
-    msg->header.stamp = ros::Time::now();
-    velcmd_pub.publish(msg);
-//    vel[0] = msg->linear.x;
-//    vel[1] = msg->linear.y;
-//    vel[2] = msg->linear.z;
-}
 
-double n=0;
-double fy =0;
 void PositionVis::fixedPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg)
 {
     static bool firstTime = true;
@@ -317,15 +301,6 @@ void PositionVis::fixedPoseCallback(const geometry_msgs::PoseWithCovarianceStamp
     pos[1] = m.pose.pose.position.y;
     pos[2] = m.pose.pose.position.z;
 
-    geometry_msgs::PointStamped pointStamped;
-    pointStamped.header = msg->header;
-    pointStamped.header.frame_id = "/world";
-    pointStamped.point.x = pos[0];
-    pointStamped.point.y = pos[1];
-    pointStamped.point.z = pos[2];
-
-    position_pub.publish(pointStamped);
-
     if(firstTime)
     {
        p_orig = pos;
@@ -333,24 +308,14 @@ void PositionVis::fixedPoseCallback(const geometry_msgs::PoseWithCovarianceStamp
     }
 
     positions.push_back(pos);
-
-    if(n<2)
-    {
-        fy = (n*fy+fixedYaw)/(n+1.0);
-        n+=1;
-    }
-    else
-    {
-        fy = (((n-1))*fy+fixedYaw)/(n+0.01);
-    }
-
-    //ROS_INFO("%f", fy);
-    m.pose.pose.position.z = 1+fy;
-
-    fixedPose_pub.publish(m);
-
-
-
+    
+    Vector<4> att;
+    att[0] = msg->pose.pose.orientation.x;
+    att[1] = msg->pose.pose.orientation.y;
+    att[2] = msg->pose.pose.orientation.z;
+    att[3] = msg->pose.pose.orientation.w;
+    
+    curAtt = att;
 }
 
 double mean(std::vector<double> &v)
@@ -382,36 +347,6 @@ double var(std::vector<double> &v)
     return sqrt(difsum/(v.size()-1));
 }
 
-void PositionVis::imuCallback(const sensor_msgs::Imu::Ptr &msg)
-{/*
-    geometry_msgs::Quaternion q = msg->orientation;
-    tf::Quaternion tq(q.x,q.y,q.z,q.w);
-    tf::Matrix3x3 rot(tq);
-
-    double r[3];
-    rot.getRPY(r[0],r[1],r[2]);
-
-    rpy[0].push_back(r[0]);
-    rpy[1].push_back(r[1]);
-    rpy[2].push_back(r[2]);
-
-    if(rpy[0].size() > 10000)
-    {
-        double varn[3];
-        varn[0] = var(rpy[0]);
-        varn[1] = var(rpy[1]);
-        varn[2] = var(rpy[2]);
-
-        printf("%f %f %f\n", varn[0], varn[1], varn[2]);
-	exit(0);
-    }
-
-   if(rpy[0].size()%100==0)
-   {
-	printf("%d\n",rpy[0].size());
-   }*/
-}
-
 void PositionVis::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg)
 {
     static bool firstgpPose = true;
@@ -420,6 +355,14 @@ void PositionVis::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped
     p[1] = msg->pose.pose.position.y;
     p[2] = msg->pose.pose.position.z;
 
+    geometry_msgs::PointStamped pointStamped;
+    pointStamped.header = msg->header;
+    pointStamped.header.frame_id = "/world";
+    pointStamped.point.x = p[0];
+    pointStamped.point.y = p[1];
+    pointStamped.point.z = p[2];
+
+    position_pub.publish(pointStamped);
 
     p_pos.push_back(p);
 
@@ -447,16 +390,6 @@ void PositionVis::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped
 
 }
 
-void PositionVis::gpsPositionCallback(const asctec_hl_comm::PositionWithCovarianceStamped::Ptr &msg)
-{
-    Vector<3> p;
-    p[0] = msg->position.x;
-    p[1] = msg->position.y;
-    p[2] = msg->position.z;
-
-    positions.push_back(p);
-
-}
 
 void PositionVis::glDraw()
 {
@@ -478,17 +411,6 @@ void PositionVis::glDraw()
 
      glEnd();
 
-
-    //glPointSize(5);
-    //glColor3f(0,0,1);
-    //glBegin(GL_POINTS);
-    //for(int i=0; i<positions.size(); i++)
-    //{
-    //    float c = ((float)(i))/positions.size();
-    //    glColor3f(1-c, 1-c, 1-c);
-    //    glVertex3f(positions[i][0], positions[i][1], 10+positions[i][2]);
-    //}
-    //glEnd();
 
      glPointSize(5);
      glColor3f(1,0,0);
@@ -515,7 +437,7 @@ void PositionVis::glDraw()
      }
      glEnd();
 
-     if(!p_pos.empty())
+     if(!positions.empty())
      {
 
          glLineWidth(3);
@@ -523,12 +445,12 @@ void PositionVis::glDraw()
          glColor3f(1,0,0);
 
          Vector<3> ep = makeVector(1,0,0);
-         Vector<3> p = p_pos.back();
-         p[0] -= orig[0];
-         p[1] -= orig[1];
-         p[2] -= orig[2];
+         Vector<3> p = positions.back();
+         p[0] -= p_orig[0];
+         p[1] -= p_orig[1];
+         p[2] -= p_orig[2];
 
-         Vector<4> q = p_att.back();
+         Vector<4> q = curAtt;//p_att.back();
          tf::Quaternion qu(q[0], q[1], q[2], q[3]);
          tf::Matrix3x3 m(qu);
          Matrix<3> rot;
@@ -628,17 +550,6 @@ void PositionVis::mainLoop()
 //    }
 }
 
-//int main(int argc, char **argv)
-//{
-
-//   // printf("\n");
-//   // printf("\t1 ....... Toggle Environment Drawing\n");
-//   // printf("\t2 ....... Toggle Sensing\n\n");
-//    SamplingSim::Instance(argc, argv);
-//    SamplingSim::Instance()->mainLoop();
-
-//    return 0;
-//}
 
 
 

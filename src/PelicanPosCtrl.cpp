@@ -27,7 +27,9 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     hasHoverPos = false;
     hover = false;
     orig = makeVector(0,0,0);
-    gpsPose_sub = nh.subscribe("/msf_core/pose", 100, &PelicanPosCtrl::gpsPoseCallback, this);
+
+    gpsPose_sub = nh.subscribe("/pose", 100, &PelicanPosCtrl::gpsPoseCallback, this);
+
     mag_sub = nh.subscribe("/fcu/mag", 10, &PelicanPosCtrl::magCallback, this);
 
     gotoService = nh.advertiseService("gotoPos", &PelicanPosCtrl::GoToPosServiceCall, this);
