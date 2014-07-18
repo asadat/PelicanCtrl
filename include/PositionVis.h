@@ -38,6 +38,8 @@ private:
     PositionVis(int argc, char **argv);
     static PositionVis* instance;
 
+    void Clear();
+
     ros::NodeHandle nh;
 
     ros::Subscriber fixedPose_sub;

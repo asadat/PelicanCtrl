@@ -109,6 +109,7 @@ void update_event(int ms)
 
 
 
+
     if(Mouse_Right)
     {
         // yaw and pitch camera
@@ -250,6 +251,7 @@ void keyboard_event(unsigned char key, int x, int y)
     Key[key] = true;
     if(!doUpdate)
         update_event(updateMS);
+
 }
 
 void keyboard_up_event(unsigned char key, int x, int y)
@@ -390,6 +392,12 @@ void PositionVis::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped
 
 }
 
+void PositionVis::Clear()
+{
+    positions.clear();
+    p_pos.clear();
+    p_att.clear();
+}
 
 void PositionVis::glDraw()
 {
@@ -485,6 +493,9 @@ void PositionVis::glDraw()
 void PositionVis::hanldeKeyPressed(std::map<unsigned char, bool> &key, bool &updateKey)
 {
     updateKey = true;
+
+    if(Key['-'])
+        Clear();
 
 //    if(key['`'])
 //    {
