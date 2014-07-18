@@ -49,7 +49,7 @@ generate_messages()
 
 
 catkin_package(
-  INCLUDE_DIRS include
+  INCLUDE_DIRS include ${catkin_INCLUDE_DIRS}
   LIBRARIES 
   CATKIN_DEPENDS roscpp  rospy  geometry_msgs  std_msgs  nav_msgs  dynamic_reconfigure  tf  asctec_hl_comm  control_toolbox message_runtime)
 
@@ -61,6 +61,7 @@ include_directories(
   
 add_executable(PositionViz ${POSITIONVIS_SOURCES})
 target_link_libraries(PositionViz  ${POSITIONVIS_LIBRARIES} ${catkin_LIBRARIES})
+add_dependencies(PositionViz  ${PROJECT_NAME}_gencpp)
 
 add_executable(PelicanCtrl ${PELICANCTRL_SOURCES})
 target_link_libraries(PelicanCtrl ${catkin_LIBRARIES})
