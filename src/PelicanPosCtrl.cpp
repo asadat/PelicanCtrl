@@ -73,7 +73,7 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     nh_.param<double>("d_yaw",pid_yaw[1], 0.0);
     nh_.param<double>("i_yaw",pid_yaw[2], 0.0);
 
-    ROS_INFO("ctrl: %f", pidx[0]);
+    //ROS_INFO("ctrl: %f", pidx[0]);
 
     pid[X].initPid(pidx[0],pidx[2], pidx[1], 0, -0);
     pid[Y].initPid(pidy[0],pidy[2], pidy[1], 0, -0);
