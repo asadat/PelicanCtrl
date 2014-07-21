@@ -8,14 +8,14 @@ ix: 0
 py: 0.8    
 dy: 0.1    
 iy: 0    
-max_xy_v: 3.5    
+max_xy_v: 1.0    
 pz_d: 0.2    
 dz_d: 0.1    
 iz_d: 0
 pz_a: 0.3
 dz_a: 0.2
 iz_a: 0.0    
-max_vz: 1.5    
+max_vz: 0.01    
 p_yaw: 0.02    
 d_yaw: 0.01    
 i_yaw: 0
