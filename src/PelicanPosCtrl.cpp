@@ -28,6 +28,8 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     hover = false;
     orig = makeVector(0,0,0);
 
+    ros::NodeHandle nh_("~");
+    
     gpsPose_sub = nh.subscribe("/pose", 100, &PelicanPosCtrl::gpsPoseCallback, this);
 
     mag_sub = nh.subscribe("/fcu/mag", 10, &PelicanPosCtrl::magCallback, this);
@@ -51,50 +53,50 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
 
     double pid_yaw[3];
 
-    nh.param<double>("px",pidx[0], 0.01);
-    nh.param<double>("dx",pidx[1], 0.0);
-    nh.param<double>("ix",pidx[2], 0.0);
+    nh_.param<double>("px",pidx[0], 0.01);
+    nh_.param<double>("dx",pidx[1], 0.0);
+    nh_.param<double>("ix",pidx[2], 0.0);
 
-    nh.param<double>("py",pidy[0], 0.01);
-    nh.param<double>("dy",pidy[1], 0.0);
-    nh.param<double>("iy",pidy[2], 0.0);
+    nh_.param<double>("py",pidy[0], 0.01);
+    nh_.param<double>("dy",pidy[1], 0.0);
+    nh_.param<double>("iy",pidy[2], 0.0);
 
-    nh.param<double>("pz_a",pidz_a[0], 0.01);
-    nh.param<double>("dz_a",pidz_a[1], 0.0);
-    nh.param<double>("iz_a",pidz_a[2], 0.0);
+    nh_.param<double>("pz_a",pidz_a[0], 0.01);
+    nh_.param<double>("dz_a",pidz_a[1], 0.0);
+    nh_.param<double>("iz_a",pidz_a[2], 0.0);
 
-    nh.param<double>("pz_d",pidz_d[0], 0.01);
-    nh.param<double>("dz_d",pidz_d[1], 0.0);
-    nh.param<double>("iz_d",pidz_d[2], 0.0);
+    nh_.param<double>("pz_d",pidz_d[0], 0.01);
+    nh_.param<double>("dz_d",pidz_d[1], 0.0);
+    nh_.param<double>("iz_d",pidz_d[2], 0.0);
 
-    nh.param<double>("p_yaw",pid_yaw[0], 0.01);
-    nh.param<double>("d_yaw",pid_yaw[1], 0.0);
-    nh.param<double>("i_yaw",pid_yaw[2], 0.0);
+    nh_.param<double>("p_yaw",pid_yaw[0], 0.01);
+    nh_.param<double>("d_yaw",pid_yaw[1], 0.0);
+    nh_.param<double>("i_yaw",pid_yaw[2], 0.0);
 
-    //ROS_INFO("ctrl: %f %f %f %f", pidx[0], pidy[0], pidz[0], pid_yaw[0]);
+    ROS_INFO("ctrl: %f", pidx[0]);
 
     pid[X].initPid(pidx[0],pidx[2], pidx[1], 0, -0);
     pid[Y].initPid(pidy[0],pidy[2], pidy[1], 0, -0);
     pid[Z].initPid(pidz_d[0],pidz_d[2], pidz_d[1], 0, -0);
     pid[YAW].initPid(pid_yaw[0],pid_yaw[2], pid_yaw[1], 0, -0);
 
-    nh.param<double>("max_xy_v",ctrlCutoff[X],0.5);
-    nh.param<double>("max_xy_v",ctrlCutoff[Y],0.5);
-    nh.param<double>("max_vz",ctrlCutoff[Z],0.5);
-    nh.param<double>("max_vyaw",ctrlCutoff[YAW],0.5);
+    nh_.param<double>("max_xy_v",ctrlCutoff[X],0.5);
+    nh_.param<double>("max_xy_v",ctrlCutoff[Y],0.5);
+    nh_.param<double>("max_vz",ctrlCutoff[Z],0.5);
+    nh_.param<double>("max_vyaw",ctrlCutoff[YAW],0.5);
 
     max_xy_v = ctrlCutoff[X];
 
-    nh.param<double>("small_xyz_v",small_xyz_v,0.5);
+    nh_.param<double>("small_xyz_v",small_xyz_v,0.5);
     //ctrlCutoff[X] = 0.5;
     //ctrlCutoff[Y] = 0.5;
     //ctrlCutoff[Z] = 0.05;
     //ctrlCutoff[YAW] = 0.1;
 
-    nh.param<double>("goal_thr_x",goalThr[X], 0);
-    nh.param<double>("goal_thr_y",goalThr[Y], 0);
-    nh.param<double>("goal_thr_z",goalThr[Z], 0);
-    nh.param<double>("goal_thr_yaw",goalThr[YAW], 0);
+    nh_.param<double>("goal_thr_x",goalThr[X], 0);
+    nh_.param<double>("goal_thr_y",goalThr[Y], 0);
+    nh_.param<double>("goal_thr_z",goalThr[Z], 0);
+    nh_.param<double>("goal_thr_yaw",goalThr[YAW], 0);
     ROS_INFO("goal reached thresholds: %f %f %f %f", goalThr[X],goalThr[Y],goalThr[Z],goalThr[YAW]);
     //goalThr[X] = 1.5;
     //goalThr[Y] = 1.5;
