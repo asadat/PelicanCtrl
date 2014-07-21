@@ -326,7 +326,7 @@ double mean(std::vector<double> &v)
         return 0;
 
     double sum=0;
-    for(int i=0; i<v.size(); i++)
+    for(unsigned int i=0; i<v.size(); i++)
     {
         sum += v[i];
     }
@@ -341,7 +341,7 @@ double var(std::vector<double> &v)
 
     double m=mean(v);
     double difsum;
-    for(int i=0; i<v.size(); i++)
+    for(unsigned int i=0; i<v.size(); i++)
     {
         difsum = (m-v[i])*(m-v[i]);
     }

@@ -168,7 +168,8 @@ void PelicanPosCtrl::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStam
     fixepose.pose.pose.position.y = curPos[1];
     fixepose.pose.pose.position.z = curPos[2];
 
-    tf::Quaternion q = tf::Quaternion(curYaw,0,0);
+    tf::Quaternion q;// = tf::Quaternion(curYaw,0,0);
+    q.setEuler(curYaw,0,0);
 
     fixepose.pose.pose.orientation.x = q.x();
     fixepose.pose.pose.orientation.y = q.y();
@@ -193,7 +194,7 @@ void PelicanPosCtrl::magCallback(const geometry_msgs::Vector3Stamped::Ptr &msg)
     }
 
     curYaw = 0;
-    for(int i=0; i<yaws.size(); i++)
+    for(unsigned int i=0; i<yaws.size(); i++)
     {
         curYaw += yaws[i];
     }
@@ -307,7 +308,8 @@ void PelicanPosCtrl::Update()
             }
         }
 
-        curCtrl[i] = pid[i].updatePid(err_4D[i], dt);
+        curCtrl[i] = pid[i].computeCommand(err_4D[i], dt);
+        //curCtrl[i] = pid[i].updatePid(err_4D[i], dt); updatePid is deprecated
         //curCtrl[i] = CUTOFF(curCtrl[i], -ctrlCutoff[i], ctrlCutoff[i]);
 
         if(i != YAW)
