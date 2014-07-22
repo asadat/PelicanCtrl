@@ -5,7 +5,7 @@
     A Ros node that implements a PID for Pelican point to point navigation. 
   </description>
   <maintainer email="asadat@autonomylab.org">Seyed Abbas Sadat</maintainer>
-  <license></license>
+  <license>MIT</license>
   <author email="asadat@autonomylab.org">Seyed Abbas Sadat</author>
 
   <buildtool_depend>catkin</buildtool_depend>
