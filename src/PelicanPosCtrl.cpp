@@ -200,12 +200,12 @@ void PelicanPosCtrl::magCallback(const geometry_msgs::Vector3Stamped::Ptr &msg)
     }
 
     curYaw /= yaws.size();
-    ROS_INFO("MAG: %f", curYaw);
+    ROS_INFO_THROTTLE(1,"MAG: %f", curYaw);
     if(curYaw > 3.1415)
         curYaw -= 2*3.1415;
     else if(curYaw < -3.1415)
         curYaw += 2*3.1415;
-   //ROS_INFO("FIX: %f", curYaw);
+   ROS_INFO_THROTTLE(1,"FIX: %f", curYaw);
     /* geometry_msgs::PoseWithCovarianceStamped fixepose;
     fixepose.pose.pose.position.x = curPos[0];
     fixepose.pose.pose.position.y = curPos[1];
@@ -263,11 +263,11 @@ void PelicanPosCtrl::Update()
     {
         if(i<YAW)
         {
-            err_4D[i] = curPos[i]-curGoal[i];
+            err_4D[i] = curGoal[i]-curPos[i];
         }
         else
         {
-            err_4D[i] = curYaw-curGoal[i];
+            err_4D[i] = curGoal[i]-curYaw;
             if(err_4D[i] > 3.14)
             {
                 err_4D[i] -= 2*3.14;
