@@ -270,7 +270,7 @@ PositionVis::PositionVis(int argc, char **argv)
     gpsPose_sub = nh.subscribe("/fcu/gps_pose", 100, &PositionVis::gpsPoseCallback, this);
     imu_sub = nh.subscribe("/fcu/imu", 100, &PositionVis::imuCallback, this);
 
-    fixedPose_sub = nh.subscribe("/msf_core/pose_after_update", 100, &PositionVis::fixedPoseCallback, this);
+    fixedPose_sub = nh.subscribe("/PelicanCtrl/fixedPose", 100, &PositionVis::fixedPoseCallback, this);
 
 
     position_pub = nh.advertise<geometry_msgs::PointStamped>("/msf_updates/position_input1", 10);
