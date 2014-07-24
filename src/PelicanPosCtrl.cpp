@@ -169,7 +169,8 @@ void PelicanPosCtrl::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStam
     fixepose.pose.pose.position.z = curPos[2];
 
     tf::Quaternion q;// = tf::Quaternion(curYaw,0,0);
-    q.setEuler(curYaw,0,0);
+    //q.setEuler(curYaw,0,0);
+    q.setRPY(0,0,curYaw);
 
     fixepose.pose.pose.orientation.x = q.x();
     fixepose.pose.pose.orientation.y = q.y();
