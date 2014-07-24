@@ -73,7 +73,7 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     nh_.param<double>("d_yaw",pid_yaw[1], 0.0);
     nh_.param<double>("i_yaw",pid_yaw[2], 0.0);
 
-    ROS_INFO("ctrl: %f", pidx[0]);
+    //ROS_INFO("ctrl: %f", pidx[0]);
 
     pid[X].initPid(pidx[0],pidx[2], pidx[1], 0, -0);
     pid[Y].initPid(pidy[0],pidy[2], pidy[1], 0, -0);
@@ -168,7 +168,8 @@ void PelicanPosCtrl::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStam
     fixepose.pose.pose.position.y = curPos[1];
     fixepose.pose.pose.position.z = curPos[2];
 
-    tf::Quaternion q = tf::Quaternion(curYaw,0,0);
+    tf::Quaternion q;// = tf::Quaternion(curYaw,0,0);
+    q.setEuler(curYaw,0,0);
 
     fixepose.pose.pose.orientation.x = q.x();
     fixepose.pose.pose.orientation.y = q.y();
@@ -193,18 +194,20 @@ void PelicanPosCtrl::magCallback(const geometry_msgs::Vector3Stamped::Ptr &msg)
     }
 
     curYaw = 0;
-    for(int i=0; i<yaws.size(); i++)
+    for(unsigned int i=0; i<yaws.size(); i++)
     {
         curYaw += yaws[i];
     }
 
     curYaw /= yaws.size();
-    //ROS_INFO("MAG: %f", curYaw);
+
+    ROS_INFO_THROTTLE(1,"MAG: %f", curYaw);
+
     if(curYaw > 3.1415)
         curYaw -= 2*3.1415;
     else if(curYaw < -3.1415)
         curYaw += 2*3.1415;
-   //ROS_INFO("FIX: %f", curYaw);
+   ROS_INFO_THROTTLE(1,"FIX: %f", curYaw);
     /* geometry_msgs::PoseWithCovarianceStamped fixepose;
     fixepose.pose.pose.position.x = curPos[0];
     fixepose.pose.pose.position.y = curPos[1];
@@ -262,11 +265,11 @@ void PelicanPosCtrl::Update()
     {
         if(i<YAW)
         {
-            err_4D[i] = curPos[i]-curGoal[i];
+            err_4D[i] = curGoal[i]-curPos[i];
         }
         else
         {
-            err_4D[i] = curYaw-curGoal[i];
+            err_4D[i] = curGoal[i]-curYaw;
             if(err_4D[i] > 3.14)
             {
                 err_4D[i] -= 2*3.14;
@@ -307,7 +310,8 @@ void PelicanPosCtrl::Update()
             }
         }
 
-        curCtrl[i] = pid[i].updatePid(err_4D[i], dt);
+        curCtrl[i] = pid[i].computeCommand(err_4D[i], dt);
+        //curCtrl[i] = pid[i].updatePid(err_4D[i], dt); updatePid is deprecated
         //curCtrl[i] = CUTOFF(curCtrl[i], -ctrlCutoff[i], ctrlCutoff[i]);
 
         if(i != YAW)
@@ -380,7 +384,7 @@ void PelicanPosCtrl::Update()
         velmsg.x = curCtrl[0];
         velmsg.y = curCtrl[1];
         velmsg.z = curCtrl[2];
-        velmsg.type = velmsg.velocity;
+        velmsg.type = velmsg.velocity_body;
         velmsg.v_max_xy = -1;
         velmsg.v_max_z   = -1;
         velPub.publish(velmsg);

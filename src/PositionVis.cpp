@@ -268,7 +268,7 @@ PositionVis::PositionVis(int argc, char **argv)
 
 
     gpsPose_sub = nh.subscribe("/fcu/gps_pose", 100, &PositionVis::gpsPoseCallback, this);
-
+    imu_sub = nh.subscribe("/fcu/imu", 100, &PositionVis::imuCallback, this);
 
     fixedPose_sub = nh.subscribe("/msf_core/pose_after_update", 100, &PositionVis::fixedPoseCallback, this);
 
@@ -285,6 +285,14 @@ PositionVis::~PositionVis()
 
 }
 
+void PositionVis::imuCallback(const sensor_msgs::Imu::Ptr &msg)
+{
+    tf::Quaternion q(msg->orientation.x, msg->orientation.y, msg->orientation.z, msg->orientation.w);
+    tf::Matrix3x3 rot(q);
+    double y=0,p=0,r=0;
+    rot.getEulerYPR(y,p,r);
+    ROS_INFO("YPR: %f %f %f", y, p, r);
+}
 
 void PositionVis::fixedPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg)
 {
@@ -326,7 +334,7 @@ double mean(std::vector<double> &v)
         return 0;
 
     double sum=0;
-    for(int i=0; i<v.size(); i++)
+    for(unsigned int i=0; i<v.size(); i++)
     {
         sum += v[i];
     }
@@ -341,7 +349,7 @@ double var(std::vector<double> &v)
 
     double m=mean(v);
     double difsum;
-    for(int i=0; i<v.size(); i++)
+    for(unsigned int i=0; i<v.size(); i++)
     {
         difsum = (m-v[i])*(m-v[i]);
     }

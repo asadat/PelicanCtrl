@@ -4,8 +4,8 @@
 	      <rosparam file="$(find pelican_ctrl)/launch/PelicanCtrl_parameters.yaml" />
 
 <!--	        <remap to="vel_cmd" from="/fcu/control" />-->
-            <remap from="pose" to="/msf_core/pose_after_update" />
-          
+            <!--remap from="pose" to="/msf_core/pose_after_update" /-->
+          <remap from="pose" to="/fcu/gps_pose" />
  
     </node>
 </launch>
