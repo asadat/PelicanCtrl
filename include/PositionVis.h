@@ -29,7 +29,7 @@ public:
     //void gpsPositionCallback(const asctec_hl_comm::PositionWithCovarianceStamped::Ptr &msg);
     void gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg);
     void fixedPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg);
-    //void imuCallback(const sensor_msgs::Imu::Ptr &msg);
+    void imuCallback(const sensor_msgs::Imu::Ptr &msg);
 
     void velCallback(const asctec_hl_comm::mav_ctrl::Ptr &msg);
 
@@ -42,6 +42,7 @@ private:
 
     ros::NodeHandle nh;
 
+    ros::Subscriber imu_sub;
     ros::Subscriber fixedPose_sub;
     ros::Subscriber gpsPose_sub;
     ros::Publisher  position_pub;
