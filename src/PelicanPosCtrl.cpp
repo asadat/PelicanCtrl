@@ -116,6 +116,11 @@ bool PelicanPosCtrl::GoToPosServiceCall(pelican_ctrl::gotoPosRequest &req, pelic
 
     origIsSet = !req.set_orig;
 
+    if(origIsSet)
+    {
+        curPos = makeVector(0,0,0);
+    }
+
     SetCurGoal(p);
     return true;
 }
@@ -248,7 +253,7 @@ void PelicanPosCtrl::Update()
     static bool ascending = false;
 
     ROS_INFO_THROTTLE(5,"Hover:%d",hover);
-    if(!hasHoverPos)
+    if(!hasHoverPos || !origIsSet)
         return;
 
     ROS_INFO_THROTTLE(5,"goal:%f %f %f",curGoal[0],curGoal[1],curGoal[2]);
