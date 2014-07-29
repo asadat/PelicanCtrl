@@ -33,7 +33,7 @@ find_package(catkin REQUIRED COMPONENTS
   asctec_hl_comm
   control_toolbox
   message_generation
-#  rosconsole
+  nav_msgs
   )
 
 #generate_dynamic_reconfigure_options(
