@@ -3,11 +3,11 @@ goal_thr_y: 0.5
 goal_thr_z: 0.5
 goal_thr_yaw: 3.14
 px: 0.5    
-dx: 0.4    
-ix: 0.2    
+dx: 0.2    
+ix: 0.4    
 py: 0.5    
-dy: 0.4    
-iy: 0.2    
+dy: 0.2    
+iy: 0.4    
 max_xy_v: 5.7    
 pz_d: 0.8    
 dz_d: 0.1    
