@@ -253,7 +253,7 @@ void PelicanPosCtrl::Update()
     static bool ascending = false;
 
     ROS_INFO_THROTTLE(5,"Hover:%d",hover);
-    if(!hasHoverPos || !origIsSet)
+    if(!hasHoverPos || !origIsSet || hover)
         return;
 
     ROS_INFO_THROTTLE(5,"goal:%f %f %f",curGoal[0],curGoal[1],curGoal[2]);
