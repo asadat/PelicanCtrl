@@ -12,6 +12,7 @@
 #include <asctec_hl_comm/mav_ctrl.h>
 #include <asctec_hl_comm/mav_ctrl_motors.h>
 #include "tf/transform_datatypes.h"
+#include "tf/transform_broadcaster.h"
 
 using namespace TooN;
 
@@ -269,13 +270,19 @@ PositionVis::PositionVis(int argc, char **argv)
 
     gpsPose_sub = nh.subscribe("/fcu/gps_pose", 100, &PositionVis::gpsPoseCallback, this);
     imu_sub = nh.subscribe("/fcu/imu", 100, &PositionVis::imuCallback, this);
+    imu_pub = nh.advertise<sensor_msgs::Imu>("/imu_fixed", 100);
 
-    fixedPose_sub = nh.subscribe("/PelicanCtrl/fixedPose", 100, &PositionVis::fixedPoseCallback, this);
+    fixedPose_sub = nh.subscribe("/msf_core/pose_after_update", 100, &PositionVis::fixedPoseCallback, this);
 
 
     position_pub = nh.advertise<geometry_msgs::PointStamped>("/msf_updates/position_input1", 10);
 
+    odomfiltered_sub = nh.subscribe("/odometry/filtered", 100, &PositionVis::odomfilteredCallback, this);
+    odom_sub = nh.subscribe("/odom", 100, &PositionVis::odomCallback, this);
+    odom_pub = nh.advertise<nav_msgs::Odometry>("/odom_fixed", 100);
 
+    gps_sub = nh.subscribe("/fcu/gps", 10, &PositionVis::gpsCallback,this);
+    gps_pub = nh.advertise<sensor_msgs::NavSatFix>("/gps_fixed", 10);
 
     glutInit(&argc, argv);
 }
@@ -285,13 +292,74 @@ PositionVis::~PositionVis()
 
 }
 
+void PositionVis::gpsCallback(const sensor_msgs::NavSatFix::Ptr &msg)
+{
+    msg->header.frame_id = "gps";
+    gps_pub.publish(msg);
+}
+
+void PositionVis::odomCallback(const nav_msgs::Odometry::Ptr &msg)
+{
+    static geometry_msgs::Point orig;
+    static bool firstOdom = true;
+
+    if(firstOdom)
+    {
+        firstOdom = false;
+        orig = msg->pose.pose.position;
+    }
+
+    msg->pose.pose.position.x -= orig.x;
+    msg->pose.pose.position.y -= orig.y;
+    msg->pose.pose.position.z -= orig.z;
+
+    msg->header.frame_id="odom_gps";
+
+    odom_pub.publish(msg);
+
+    p_pos.push_back(makeVector(msg->pose.pose.position.x, msg->pose.pose.position.y, msg->pose.pose.position.z));
+
+
+}
+
+void PositionVis::odomfilteredCallback(const nav_msgs::Odometry::Ptr &msg)
+{
+    static geometry_msgs::Point orig;
+    static bool firstOdom = true;
+
+    if(firstOdom)
+    {
+        firstOdom = false;
+        orig = msg->pose.pose.position;
+    }
+
+    msg->pose.pose.position.x -= orig.x;
+    msg->pose.pose.position.y -= orig.y;
+    msg->pose.pose.position.z -= orig.z;
+
+
+    positions.push_back(makeVector(msg->pose.pose.position.x, msg->pose.pose.position.y, msg->pose.pose.position.z));
+}
+
 void PositionVis::imuCallback(const sensor_msgs::Imu::Ptr &msg)
 {
+    msg->header.frame_id="imu";
+    imu_pub.publish(msg);
+
     tf::Quaternion q(msg->orientation.x, msg->orientation.y, msg->orientation.z, msg->orientation.w);
     tf::Matrix3x3 rot(q);
     double y=0,p=0,r=0;
     rot.getEulerYPR(y,p,r);
-    ROS_INFO("YPR: %f %f %f", y, p, r);
+    ROS_INFO_THROTTLE(0.5,"YPR: %f %f %f", y, p, r);
+
+    static tf::TransformBroadcaster br;
+    tf::Transform transform;
+    transform.setOrigin( tf::Vector3(0.0, 0.0, 0.0) );
+    tf::Quaternion qq;
+    qq.setRPY(0, 0, 0);
+    transform.setRotation(qq);
+    br.sendTransform(tf::StampedTransform(transform, msg->header.stamp, "pelican_base", "fcu"));
+    //br.sendTransform(tf::StampedTransform(transform, msg->header.stamp, "pelican_base", "gps"));
 }
 
 void PositionVis::fixedPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg)

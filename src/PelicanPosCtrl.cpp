@@ -116,7 +116,7 @@ bool PelicanPosCtrl::GoToPosServiceCall(pelican_ctrl::gotoPosRequest &req, pelic
 
     origIsSet = !req.set_orig;
 
-    if(origIsSet)
+    if(!origIsSet)
     {
         curPos = makeVector(0,0,0);
     }
@@ -235,6 +235,9 @@ void PelicanPosCtrl::magCallback(const geometry_msgs::Vector3Stamped::Ptr &msg)
 
 void PelicanPosCtrl::SetCurGoal(TooN::Vector<4> p)
 {
+    for(int i=0; i<=YAW; i++)
+        pid[i].reset();
+
     hasHoverPos = true;
     hover = false;
     angularVelDir = 0;
@@ -252,16 +255,17 @@ void PelicanPosCtrl::Update()
 {
     static bool ascending = false;
 
+    static ros::Time lastTime = ros::Time::now();
+    ros::Time curTime = ros::Time::now();
+    ros::Duration dt = lastTime-curTime;
+    lastTime = curTime;
+
     ROS_INFO_THROTTLE(5,"Hover:%d",hover);
     if(!hasHoverPos || !origIsSet || hover)
         return;
 
     ROS_INFO_THROTTLE(5,"goal:%f %f %f",curGoal[0],curGoal[1],curGoal[2]);
 
-    static ros::Time lastTime = ros::Time::now();
-    ros::Time curTime = ros::Time::now();
-    ros::Duration dt = lastTime-curTime;
-    lastTime = curTime;
 
     bool smallXYZCtrl = true;
     bool atgoal = true;
@@ -353,7 +357,7 @@ void PelicanPosCtrl::Update()
 
         ROS_INFO_THROTTLE(5, "ERR: %f\t%f\t%f dt: %f", err_4D[0], err_4D[1], err_4D[2], dt.toSec());
         ROS_INFO_THROTTLE(5, "CTRL-P: %f\t%f\t%f\t%f dt: %f", curCtrl[0], curCtrl[1], curCtrl[2], curCtrl[3], dt.toSec());
-        ROS_INFO_THROTTLE(4,"POSE: %f\t%f\t%f\t%f ", curPos[0], curPos[1], curPos[2], (curYaw)*180/3.14);
+        ROS_INFO_THROTTLE(5,"POSE: %f\t%f\t%f\t%f ", curPos[0], curPos[1], curPos[2], (curYaw)*180/3.14);
 
 
 //        geometry_msgs::Twist velmsg;
