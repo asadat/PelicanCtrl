@@ -6,6 +6,7 @@
 #include "pelican_ctrl/gotoPos.h"
 #include "control_toolbox/pid.h"
 #include "pelican_ctrl/hover.h"
+#include "pelican_ctrl/gotoPos_body.h"
 
 class PelicanPosCtrl
 {
@@ -29,6 +30,7 @@ public:
     void gpsPositionCallback(const asctec_hl_comm::PositionWithCovarianceStamped::Ptr &msg);
     void gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::Ptr &msg);
     bool GoToPosServiceCall(pelican_ctrl::gotoPosRequest &req, pelican_ctrl::gotoPosResponse &res);
+    bool GoToPos_bodyServiceCall(pelican_ctrl::gotoPos_bodyRequest &req, pelican_ctrl::gotoPos_bodyResponse &res);
     bool HoverServiceCall(pelican_ctrl::hoverRequest &req, pelican_ctrl::hoverResponse &res);
 
 private:
@@ -36,6 +38,7 @@ private:
     PelicanPosCtrl(int argc, char **argv);
     static PelicanPosCtrl* instance;
 
+    void SetCurGoal_body(TooN::Vector<4> p);
     void SetCurGoal(TooN::Vector<4> p);
     void OnReachedGoal();
 
@@ -45,6 +48,7 @@ private:
     ros::Subscriber gpsPose_sub;
     ros::Subscriber mag_sub;
 
+    ros::ServiceServer gotoBodyService;
     ros::ServiceServer gotoService;
     ros::ServiceServer hoverService;
 

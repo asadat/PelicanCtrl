@@ -42,6 +42,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_service_files(FILES
    gotoPos.srv  
+   gotoPos_body.srv
    hover.srv
 )
 
