@@ -255,8 +255,8 @@ void PelicanPosCtrl::magCallback(const geometry_msgs::Vector3Stamped::Ptr &msg)
 void PelicanPosCtrl::SetCurGoal_body(TooN::Vector<4> p)
 {
     Vector<4> g;
-    Matrix<2> r = Data(cos(curYaw+1.57), -sin(curYaw+1.57),
-                       sin(curYaw+1.57), cos(curYaw+1.57));
+    Matrix<2> r = Data(cos(curYaw), -sin(curYaw),
+                       sin(curYaw), cos(curYaw));
     Vector<2> xy = makeVector(p[0],p[1]);
     xy = r*xy;
 
