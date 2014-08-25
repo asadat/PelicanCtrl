@@ -4,6 +4,17 @@ project(pelican_ctrl)
 
 set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS} -g -Wall") # For G++ <4.7; also appears to be supported in G++ 4.7+ as alias to c++11
 
+include(ExternalProject)
+ExternalProject_Add(libtoon
+  URL http://www.edwardrosten.com/cvd/TooN-2.2.tar.gz
+  PREFIX ${CMAKE_BINARY_DIR}/libtoon
+  CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix=${CMAKE_BINARY_DIR}/libtoon
+  BUILD_COMMAND make
+#  TEST_COMMAND make test
+  INSTALL_COMMAND make install
+  BUILD_IN_SOURCE 1
+)
+
 #set(UEYE_INCLUDE_PATH /usr/include)
 #set(UEYE_LIBRARY_PATH /usr/lib)
 #set(UEYE_LIBRARY ueye_api)
@@ -57,17 +68,18 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${CMAKE_BINARY_DIR}/libtoon/include
   )
 
   
 add_executable(PositionViz ${POSITIONVIS_SOURCES})
 target_link_libraries(PositionViz  ${POSITIONVIS_LIBRARIES} ${catkin_LIBRARIES})
-add_dependencies(PositionViz  ${PROJECT_NAME}_gencpp)
+add_dependencies(PositionViz  ${PROJECT_NAME}_gencpp libtoon)
 
 add_executable(PelicanCtrl ${PELICANCTRL_SOURCES})
 target_link_libraries(PelicanCtrl ${catkin_LIBRARIES})
 
-add_dependencies(PelicanCtrl  ${PROJECT_NAME}_gencpp)
+add_dependencies(PelicanCtrl  ${PROJECT_NAME}_gencpp libtoon)
 
 #install(TARGETS ${UEYECAM_LIB_NAME} ${UEYECAM_NODELET_NAME}
 #  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
