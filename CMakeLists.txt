@@ -56,7 +56,7 @@ generate_messages()
 
 
 catkin_package(
-  INCLUDE_DIRS include ${catkin_INCLUDE_DIRS}
+  INCLUDE_DIRS include ${catkin_INCLUDE_DIRS} ${CMAKE_BINARY_DIR}/libtoon/include
   LIBRARIES 
   CATKIN_DEPENDS roscpp  rospy  geometry_msgs  std_msgs  nav_msgs  dynamic_reconfigure  tf  asctec_hl_comm  control_toolbox message_runtime)
 
