@@ -10,7 +10,7 @@ dy: 0.2
 iy: 0.4    
 max_xy_v: 5.7    
 pz_d: 0.8    
-dz_d: 0.1    
+dz_d: 0.2    
 iz_d: 0
 pz_a: 0.8
 dz_a: 0.2

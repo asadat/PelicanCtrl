@@ -34,6 +34,7 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
 
     mag_sub = nh.subscribe("/fcu/mag", 10, &PelicanPosCtrl::magCallback, this);
 
+    gotoBodyService = nh.advertiseService("gotoPos_body", &PelicanPosCtrl::GoToPos_bodyServiceCall, this);
     gotoService = nh.advertiseService("gotoPos", &PelicanPosCtrl::GoToPosServiceCall, this);
     hoverService = nh.advertiseService("hover", &PelicanPosCtrl::HoverServiceCall, this);
 
@@ -104,6 +105,24 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     //goalThr[YAW] = 0.2;
 
     //SetCurGoal(orig);
+}
+
+bool PelicanPosCtrl::GoToPos_bodyServiceCall(pelican_ctrl::gotoPos_bodyRequest &req, pelican_ctrl::gotoPos_bodyResponse &res)
+{
+    Vector<4> p;
+    p[0] = req.dx;
+    p[1] = req.dy;
+    p[2] = req.dz;
+    p[3] = req.dyaw;
+
+    if(!origIsSet)
+    {
+        orig = curPos;
+        curPos = makeVector(0,0,0);
+    }
+
+    SetCurGoal_body(p);
+    return true;
 }
 
 bool PelicanPosCtrl::GoToPosServiceCall(pelican_ctrl::gotoPosRequest &req, pelican_ctrl::gotoPosResponse &res)
@@ -233,6 +252,25 @@ void PelicanPosCtrl::magCallback(const geometry_msgs::Vector3Stamped::Ptr &msg)
 }
 
 
+void PelicanPosCtrl::SetCurGoal_body(TooN::Vector<4> p)
+{
+    Vector<4> g;
+    Matrix<2> r = Data(cos(curYaw), -sin(curYaw),
+                       sin(curYaw), cos(curYaw));
+    Vector<2> xy = makeVector(p[0],p[1]);
+    xy = r*xy;
+
+    g[0] = curPos[0] + xy[0];
+    g[1] = curPos[1] + xy[1];
+    g[2] = curPos[2] + p[2];
+    g[3] = curYaw + p[3];
+
+    ROS_INFO("POSE:%f\t%f\t%f\t%f", curPos[0], curPos[1], curPos[2], curPos[3]);
+    ROS_INFO("GOBD:%f\t%f\t%f\t%f", g[0], g[1], g[2], g[3]);
+
+    SetCurGoal(g);
+}
+
 void PelicanPosCtrl::SetCurGoal(TooN::Vector<4> p)
 {
     for(int i=0; i<=YAW; i++)
@@ -261,7 +299,7 @@ void PelicanPosCtrl::Update()
     lastTime = curTime;
 
     ROS_INFO_THROTTLE(5,"Hover:%d",hover);
-    if(!hasHoverPos || !origIsSet)
+    if(!hasHoverPos || !origIsSet || hover)
         return;
 
     ROS_INFO_THROTTLE(5,"goal:%f %f %f",curGoal[0],curGoal[1],curGoal[2]);
