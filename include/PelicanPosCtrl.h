@@ -13,7 +13,7 @@ class PelicanPosCtrl
 public:
     enum DOF {X=0, Y, Z, YAW, NUM};
 
-    ~PelicanPosCtrl(){};
+    ~PelicanPosCtrl();
 
     static PelicanPosCtrl * Instance(int argc=0, char **argv=NULL)
     {

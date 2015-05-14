@@ -24,14 +24,9 @@ set(POSITIONVIS_LIBRARIES GL GLU glut)
 
 set(PELICANCTRL_SOURCES
   src/PelicanPosCtrl.cpp
-  src/LoggingService.cpp
   include/PelicanPosCtrl.h
 )
 
-set(POSITIONVIS_SOURCES
-  include/PositionVis.h
-  src/PositionVis.cpp
-)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -70,11 +65,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${CMAKE_BINARY_DIR}/libtoon/include
   )
-
-  
-add_executable(PositionViz ${POSITIONVIS_SOURCES})
-target_link_libraries(PositionViz  ${POSITIONVIS_LIBRARIES} ${catkin_LIBRARIES})
-add_dependencies(PositionViz  ${PROJECT_NAME}_gencpp libtoon)
 
 add_executable(PelicanCtrl ${PELICANCTRL_SOURCES})
 target_link_libraries(PelicanCtrl ${catkin_LIBRARIES})
