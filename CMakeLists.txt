@@ -7,8 +7,8 @@ set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS} -g -Wall") # For G++ <4.7; al
 include(ExternalProject)
 ExternalProject_Add(libtoon
   URL http://www.edwardrosten.com/cvd/TooN-2.2.tar.gz
-  PREFIX ${CMAKE_BINARY_DIR}/libtoon
-  CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix=${CMAKE_BINARY_DIR}/libtoon
+  PREFIX ${CATKIN_DEVEL_PREFIX}
+  CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix=${CATKIN_DEVEL_PREFIX}
   BUILD_COMMAND make
 #  TEST_COMMAND make test
   INSTALL_COMMAND make install
@@ -56,19 +56,18 @@ generate_messages()
 
 
 catkin_package(
-  INCLUDE_DIRS include ${catkin_INCLUDE_DIRS}
+  INCLUDE_DIRS include ${catkin_INCLUDE_DIRS} ${CATKIN_DEVEL_PREFIX}/include
   LIBRARIES 
   CATKIN_DEPENDS roscpp  rospy  geometry_msgs  std_msgs  nav_msgs  dynamic_reconfigure  tf  asctec_hl_comm  control_toolbox message_runtime)
 
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${CMAKE_BINARY_DIR}/libtoon/include
+  ${CATKIN_DEVEL_PREFIX}/include
   )
 
 add_executable(PelicanCtrl ${PELICANCTRL_SOURCES})
 target_link_libraries(PelicanCtrl ${catkin_LIBRARIES})
-
 add_dependencies(PelicanCtrl  ${PROJECT_NAME}_gencpp libtoon)
 
 #install(TARGETS ${UEYECAM_LIB_NAME} ${UEYECAM_NODELET_NAME}
