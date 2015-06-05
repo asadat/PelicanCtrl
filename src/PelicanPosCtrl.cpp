@@ -32,10 +32,15 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     mag_sub = nh.subscribe("/fcu/mag", 10, &PelicanPosCtrl::magCallback, this);
     gotoBodyService = nh.advertiseService("gotoPos_body", &PelicanPosCtrl::GoToPos_bodyServiceCall, this);
     gotoService = nh.advertiseService("gotoPos", &PelicanPosCtrl::GoToPosServiceCall, this);
+    gotoGPSService = nh.advertiseService("gotoPosGPS", &PelicanPosCtrl::GoToPosGPSServiceCall, this);
     hoverService = nh.advertiseService("hover", &PelicanPosCtrl::HoverServiceCall, this);
+
     velPub = nh.advertise<asctec_hl_comm::mav_ctrl>("/fcu/control", 1);
     atGoalPub = nh.advertise<std_msgs::Bool>("at_goal", 10);
     fixedPosePub = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("fixedPose", 100);
+
+    wsg84Toxyz = nh.serviceClient<asctec_hl_comm::Wgs84ToEnu>("Wgs84ToEnu");
+
 
     curCtrl = makeVector(0,0,0,0);
     curPos = makeVector(0,0,0);
@@ -127,6 +132,30 @@ bool PelicanPosCtrl::GoToPosServiceCall(pelican_ctrl::gotoPosRequest &req, pelic
 
     SetCurGoal(p);
     return true;
+}
+
+bool PelicanPosCtrl::GoToPosGPSServiceCall(pelican_ctrl::gotoPosGPSRequest &req, pelican_ctrl::gotoPosGPSResponse &res)
+{
+    asctec_hl_comm::Wgs84ToEnuResponse conv_res;
+    asctec_hl_comm::Wgs84ToEnuRequest conv_req;
+    conv_req.lat = req.lat;
+    conv_req.lon = req.lon;
+    conv_req.alt = req.alt;
+
+    if(origIsSet && wsg84Toxyz.call(conv_req, conv_res))
+    {
+        Vector<4> p;
+        p[0] = conv_res.x - orig[0];
+        p[1] = conv_res.y - orig[1];
+        p[2] = conv_res.z - orig[2];
+        p[3] = req.yaw;
+
+        SetCurGoal(p);
+
+        return true;
+    }
+    else
+        return false;
 }
 
 bool PelicanPosCtrl::HoverServiceCall(pelican_ctrl::hoverRequest &req, pelican_ctrl::hoverResponse &res)
