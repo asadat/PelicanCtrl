@@ -41,6 +41,7 @@ private:
     PelicanPosCtrl(int argc, char **argv);
     static PelicanPosCtrl* instance;
 
+    void PublishGoal();
     void SetCurGoal_body(TooN::Vector<4> p);
     void SetCurGoal(TooN::Vector<4> p);
     void OnReachedGoal();
@@ -60,6 +61,7 @@ private:
     ros::Publisher  velPub;
     ros::Publisher atGoalPub;
     ros::Publisher fixedPosePub;
+    ros::Publisher goalPosePub;
 
     std::vector<TooN::Vector<3> > p_pos;
     std::vector<TooN::Vector<4> > p_att;

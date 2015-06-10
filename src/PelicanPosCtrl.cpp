@@ -38,6 +38,7 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     velPub = nh.advertise<asctec_hl_comm::mav_ctrl>("/fcu/control", 1);
     atGoalPub = nh.advertise<std_msgs::Bool>("at_goal", 10);
     fixedPosePub = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("fixedPose", 100);
+    goalPosePub = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("goalPose", 10);
 
     wsg84Toxyz = nh.serviceClient<asctec_hl_comm::Wgs84ToEnu>("/gps_to_local_enu");
 
@@ -272,6 +273,25 @@ void PelicanPosCtrl::OnReachedGoal()
    hover = true;
 }
 
+void PelicanPosCtrl::PublishGoal()
+{
+    geometry_msgs::PoseWithCovarianceStamped gp;
+    gp.pose.pose.position.x = curGoal[0];
+    gp.pose.pose.position.y = curGoal[1];
+    gp.pose.pose.position.z = curGoal[2];
+
+    tf::Quaternion q;
+    q.setRPY(0,0,curGoal[3]);
+
+    gp.pose.pose.orientation.x = q.x();
+    gp.pose.pose.orientation.y = q.y();
+    gp.pose.pose.orientation.z = q.z();
+    gp.pose.pose.orientation.w = q.w();
+
+    gp.header.stamp = ros::Time::now();
+    goalPosePub.publish(gp);
+}
+
 void PelicanPosCtrl::Update()
 {
     static bool ascending = false;
@@ -286,7 +306,7 @@ void PelicanPosCtrl::Update()
         return;
 
     ROS_INFO_THROTTLE(5,"goal:%f %f %f",curGoal[0],curGoal[1],curGoal[2]);
-
+    PublishGoal();
 
     bool smallXYZCtrl = true;
     bool atgoal = true;
