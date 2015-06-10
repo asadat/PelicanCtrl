@@ -39,7 +39,7 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     atGoalPub = nh.advertise<std_msgs::Bool>("at_goal", 10);
     fixedPosePub = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("fixedPose", 100);
 
-    wsg84Toxyz = nh.serviceClient<asctec_hl_comm::Wgs84ToEnu>("Wgs84ToEnu");
+    wsg84Toxyz = nh.serviceClient<asctec_hl_comm::Wgs84ToEnu>("/gps_to_local_enu");
 
 
     curCtrl = makeVector(0,0,0,0);
