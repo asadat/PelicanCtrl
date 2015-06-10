@@ -155,7 +155,10 @@ bool PelicanPosCtrl::GoToPosGPSServiceCall(pelican_ctrl::gotoPosGPSRequest &req,
         return true;
     }
     else
+    {
+        ROS_WARN("Failed to serve gotoPosGPS: originIsSet: %s", origIsSet?"true":"false");
         return false;
+    }
 }
 
 bool PelicanPosCtrl::HoverServiceCall(pelican_ctrl::hoverRequest &req, pelican_ctrl::hoverResponse &res)
