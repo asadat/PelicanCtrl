@@ -149,7 +149,8 @@ bool PelicanPosCtrl::GoToPosGPSServiceCall(pelican_ctrl::gotoPosGPSRequest &req,
         Vector<4> p;
         p[0] = conv_res.x - orig[0];
         p[1] = conv_res.y - orig[1];
-        p[2] = conv_res.z - orig[2];
+        //p[2] = conv_res.z - orig[2];
+        p[2] = req.z;
         p[3] = req.yaw;
 
         SetCurGoal(p);
