@@ -6,7 +6,7 @@ set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS} -g -Wall") # For G++ <4.7; al
 
 include(ExternalProject)
 ExternalProject_Add(libtoon
-  URL http://www.edwardrosten.com/cvd/TooN-2.2.tar.gz
+  URL ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/TooN-2.2.tar.gz
   PREFIX ${CATKIN_DEVEL_PREFIX}
   CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix=${CATKIN_DEVEL_PREFIX}
   BUILD_COMMAND make
