@@ -81,6 +81,7 @@ PelicanPosCtrl::PelicanPosCtrl(int argc, char **argv):nh("PelicanCtrl")
     nh_.param<double>("max_xy_v",ctrlCutoff[Y],0.5);
     nh_.param<double>("max_vz",ctrlCutoff[Z],0.5);
     nh_.param<double>("max_vyaw",ctrlCutoff[YAW],0.5);
+    nh_.param<double>("mag_dec",mag_dec,0.0);
 
     max_xy_v = ctrlCutoff[X];
 
@@ -211,7 +212,7 @@ void PelicanPosCtrl::gpsPoseCallback(const geometry_msgs::PoseWithCovarianceStam
 
 void PelicanPosCtrl::magCallback(const geometry_msgs::Vector3Stamped::Ptr &msg)
 {
-    curYaw = atan2(msg->vector.y, msg->vector.x) + ((45.0)*3.14/180.0);
+    curYaw = atan2(msg->vector.y, msg->vector.x) + ((mag_dec+45.0)*3.14/180.0);
 
     yaws.push_back(curYaw);
     if(yaws.size()>50)
