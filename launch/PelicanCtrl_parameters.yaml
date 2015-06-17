@@ -1,5 +1,5 @@
-goal_thr_x: 2.0
-goal_thr_y: 2.0
+goal_thr_x: 1.0
+goal_thr_y: 1.0
 goal_thr_z: 1.0
 goal_thr_yaw: 0.5
 px: 3.2    
